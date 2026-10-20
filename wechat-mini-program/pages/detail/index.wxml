@@ -1,0 +1,35 @@
+<view class="detail-page">
+  <view class="map-wrap">
+    <map class="detail-map" latitude="{{mapCenter.latitude}}" longitude="{{mapCenter.longitude}}" scale="17" markers="{{marker}}" show-location enable-zoom enable-scroll show-compass="{{false}}"></map>
+    <view class="map-top-shade"></view>
+    <view class="status-spacer"></view>
+    <view class="detail-nav">
+      <view class="back-btn" bindtap="goBack">‹</view>
+      <view class="detail-nav-copy"><text>地点详情</text><text>东北大学 · 浑南校区</text></view>
+      <view class="favorite-btn {{isFavorite ? 'active' : ''}}" bindtap="toggleFavorite">{{isFavorite ? '♥' : '♡'}}</view>
+    </view>
+    <view class="distance-pill">距你 {{distanceText || '定位中'}}</view>
+  </view>
+
+  <view class="detail-sheet">
+    <view class="sheet-handle"></view>
+    <view class="poi-head">
+      <view class="detail-poi-icon" style="background:{{location.softColor}};color:{{location.color}};">{{location.emoji}}</view>
+      <view class="detail-title-copy"><text class="detail-title">{{location.name}}</text><text class="detail-subtitle">{{location.subtitle}} · {{location.categoryName}}</text></view>
+    </view>
+    <view class="tag-row"><text wx:for="{{location.tags}}" wx:key="*this" class="poi-tag">{{item}}</text></view>
+    <view class="info-grid">
+      <view class="info-item"><text class="info-label">开放时间</text><text class="info-value">{{location.open}}</text></view>
+      <view class="info-item"><text class="info-label">楼层 / 区域</text><text class="info-value">{{location.floor}}</text></view>
+    </view>
+    <view class="detail-block"><text class="block-title">地点介绍</text><text class="block-text">{{location.description}}</text></view>
+    <view class="detail-block"><text class="block-title">设施服务</text><view class="facility-row"><text wx:for="{{location.facilities}}" wx:key="*this" class="facility">{{item}}</text></view></view>
+    <view class="tip-card"><view class="tip-icon">i</view><view><text class="tip-title">校园小贴士</text><text class="tip-text">{{location.tips}}</text></view></view>
+    <view class="detail-bottom-space"></view>
+  </view>
+
+  <view class="detail-actions">
+    <view class="secondary-btn system-detail" bindtap="openSystemNavigation"><text>↗</text><text>系统地图</text></view>
+    <button class="primary-btn detail-route" bindtap="startRoute"><text>➤</text><text>到这里去</text></button>
+  </view>
+</view>

@@ -1,0 +1,173 @@
+<view class="route-page">
+  <map
+    id="routeMap"
+    class="route-map"
+    latitude="{{mapCenter.latitude}}"
+    longitude="{{mapCenter.longitude}}"
+    scale="{{mapScale}}"
+    markers="{{markers}}"
+    polyline="{{polyline}}"
+    show-location
+    enable-zoom
+    enable-scroll
+    enable-rotate="{{false}}"
+    show-compass="{{false}}"
+  ></map>
+
+  <view class="route-top-shade"></view>
+
+  <view class="route-top">
+    <view class="status-spacer"></view>
+    <view class="route-header">
+      <view class="route-brand">
+        <view class="mini-brand-mark">⌖</view>
+        <view class="route-brand-copy">
+          <text class="route-page-title">校园导航</text>
+          <text class="route-page-sub">东北大学 · 浑南校区</text>
+        </view>
+      </view>
+      <view class="position-pill {{permissionDenied ? 'warning' : ''}}" bindtap="handlePermissionHelp">
+        <view class="position-dot"></view>
+        <text>{{locationStatus}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{!isNavigating}}" class="route-setup floating-card">
+      <view class="endpoint-row">
+        <view class="endpoint-marker start"></view>
+        <view class="endpoint-copy">
+          <text class="endpoint-label">起点</text>
+          <text class="endpoint-name">我的位置</text>
+        </view>
+        <view class="relocate-btn" bindtap="getInitialLocation">重新定位</view>
+      </view>
+      <view class="endpoint-connector">
+        <view class="connector-line"></view>
+        <view class="connector-dots">•••</view>
+      </view>
+      <picker mode="selector" range="{{locations}}" range-key="name" bindchange="onDestinationChange">
+        <view class="endpoint-row destination-row">
+          <view class="endpoint-marker end"></view>
+          <view class="endpoint-copy">
+            <text class="endpoint-label">目的地</text>
+            <text class="endpoint-name">{{destination.name}}</text>
+          </view>
+          <view class="picker-action">切换 ›</view>
+        </view>
+      </picker>
+      <view class="setup-divider"></view>
+      <view class="mode-row">
+        <view class="mode-tabs">
+          <view class="mode-tab {{mode === 'walk' ? 'active' : ''}}" data-mode="walk" bindtap="onModeChange">
+            <text class="mode-symbol">步</text>
+            <text>步行</text>
+          </view>
+          <view class="mode-tab {{mode === 'bike' ? 'active' : ''}}" data-mode="bike" bindtap="onModeChange">
+            <text class="mode-symbol">骑</text>
+            <text>骑行</text>
+          </view>
+        </view>
+        <view class="map-pick-btn" bindtap="chooseDestinationOnMap">
+          <text class="map-pick-icon">⌖</text>
+          <text>地图选点</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="instruction-card floating-card">
+      <view class="instruction-arrow">{{instruction.symbol}}</view>
+      <view class="instruction-copy">
+        <text class="instruction-title">{{instruction.title}}</text>
+        <text class="instruction-detail">{{instruction.detail}}</text>
+      </view>
+      <view class="instruction-distance">{{instruction.distanceText}}</view>
+    </view>
+  </view>
+
+  <view class="route-controls">
+    <view class="route-control" bindtap="recenter">
+      <text class="route-control-icon">⌖</text>
+    </view>
+    <view class="route-control system" bindtap="openSystemNavigation">
+      <text class="route-control-icon small">➤</text>
+    </view>
+  </view>
+
+  <view wx:if="{{!isNavigating}}" class="route-bottom floating-card">
+    <view class="sheet-handle"></view>
+    <view class="summary-row">
+      <view class="summary-left">
+        <view class="summary-number-line">
+          <text class="summary-distance">{{route.distanceText || '--'}}</text>
+          <text class="summary-unit">全程</text>
+        </view>
+        <text class="summary-sub">{{route.durationText || '正在规划'}} · {{modeName}}{{route.source === 'campus' ? '校园路线' : ''}}</text>
+      </view>
+      <view class="eta-badge">
+        <text class="eta-label">预计用时</text>
+        <text class="eta-value">{{route.durationText || '--'}}</text>
+      </view>
+    </view>
+
+    <view class="route-hint-row">
+      <view class="hint-arrow">↑</view>
+      <text class="route-hint">{{route.guidance.startInstruction || '正在生成校园路线'}}</text>
+      <view class="detail-toggle" bindtap="toggleSteps">{{showSteps ? '收起' : '路线详情'}}</view>
+    </view>
+
+    <scroll-view wx:if="{{showSteps}}" class="steps-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view wx:for="{{routeSteps}}" wx:key="index" class="step-item">
+        <view class="step-icon {{item.icon === '终' ? 'finish' : ''}}">{{item.icon}}</view>
+        <view class="step-copy">
+          <text class="step-title">{{item.title}}</text>
+          <text class="step-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="route-actions">
+      <view class="system-nav-btn" bindtap="openSystemNavigation">
+        <text class="system-nav-icon">↗</text>
+        <text>系统地图</text>
+      </view>
+      <button class="primary-btn start-nav-btn" bindtap="startNavigation">
+        <text class="nav-play">➤</text>
+        <text>开始{{modeName}}导航</text>
+      </button>
+    </view>
+    <view class="route-source">基于真实位置与 OpenStreetMap 校园步道数据规划</view>
+  </view>
+
+  <view wx:else class="navigation-bottom floating-card">
+    <view class="sheet-handle"></view>
+    <view class="nav-metrics">
+      <view class="metric-main">
+        <text class="metric-number">{{route.distanceText || '--'}}</text>
+        <text class="metric-label">剩余距离</text>
+      </view>
+      <view class="metric-divider"></view>
+      <view class="metric-side">
+        <text class="metric-value">{{route.durationText || '--'}}</text>
+        <text class="metric-label">预计用时</text>
+      </view>
+      <view class="metric-side">
+        <view class="nav-active-dot"></view>
+        <text class="metric-label">正在跟随</text>
+      </view>
+    </view>
+    <view class="next-action">
+      <view class="next-action-icon">{{instruction.symbol}}</view>
+      <view class="next-action-copy">
+        <text class="next-action-title">{{instruction.detail}}</text>
+        <text class="next-action-desc">目的地：{{destination.name}}</text>
+      </view>
+      <view class="next-action-distance">{{instruction.distanceText}}</view>
+    </view>
+    <view class="navigation-actions">
+      <view class="end-nav-btn" bindtap="endNavigation">结束导航</view>
+      <view class="system-nav-btn compact" bindtap="openSystemNavigation">
+        <text>切换到系统地图</text>
+      </view>
+    </view>
+  </view>
+</view>

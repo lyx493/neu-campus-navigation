@@ -1,0 +1,40 @@
+.detail-page { min-height: 100vh; background: #f5f7fb; }
+.map-wrap { position: relative; height: 500rpx; }
+.detail-map { width: 100%; height: 100%; }
+.map-top-shade { position: absolute; left: 0; right: 0; top: 0; height: 220rpx; background: linear-gradient(180deg,rgba(19,36,60,.36),rgba(19,36,60,0)); pointer-events: none; }
+.detail-nav { position: absolute; left: 24rpx; right: 24rpx; top: calc(env(safe-area-inset-top) + 18rpx); display: flex; align-items: center; }
+.back-btn, .favorite-btn { width: 72rpx; height: 72rpx; border-radius: 24rpx; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.95); color: #20344e; box-shadow: 0 8rpx 22rpx rgba(20,39,65,.16); font-size: 46rpx; line-height: 1; }
+.favorite-btn { margin-left: auto; color: #64748a; font-size: 34rpx; }
+.favorite-btn.active { color: #eb5a43; }
+.detail-nav-copy { margin-left: 14rpx; display: flex; flex-direction: column; color: #fff; text-shadow: 0 2rpx 8rpx rgba(0,0,0,.25); }
+.detail-nav-copy text:first-child { font-size: 27rpx; font-weight: 750; }
+.detail-nav-copy text:last-child { margin-top: 4rpx; font-size: 17rpx; opacity: .8; }
+.distance-pill { position: absolute; left: 24rpx; bottom: 22rpx; height: 50rpx; padding: 0 18rpx; border-radius: 25rpx; display: flex; align-items: center; background: rgba(255,255,255,.96); color: #1e66e8; box-shadow: 0 8rpx 22rpx rgba(24,47,82,.13); font-size: 20rpx; font-weight: 700; }
+.detail-sheet { position: relative; margin-top: -30rpx; z-index: 3; min-height: calc(100vh - 470rpx); padding: 14rpx 28rpx calc(180rpx + env(safe-area-inset-bottom)); border-radius: 36rpx 36rpx 0 0; background: #f5f7fb; box-shadow: 0 -12rpx 32rpx rgba(20,39,65,.1); }
+.sheet-handle { width: 64rpx; height: 6rpx; margin: 0 auto 22rpx; border-radius: 4rpx; background: #d4dbe5; }
+.poi-head { display: flex; align-items: center; }
+.detail-poi-icon { width: 92rpx; height: 92rpx; border-radius: 28rpx; display: flex; align-items: center; justify-content: center; font-size: 38rpx; font-weight: 750; }
+.detail-title-copy { flex: 1; min-width: 0; margin-left: 18rpx; display: flex; flex-direction: column; }
+.detail-title { font-size: 38rpx; font-weight: 850; color: #17263c; letter-spacing: -.8rpx; }
+.detail-subtitle { margin-top: 8rpx; font-size: 21rpx; color: #8491a4; }
+.tag-row { margin-top: 20rpx; display: flex; flex-wrap: wrap; gap: 10rpx; }
+.poi-tag { height: 44rpx; padding: 0 15rpx; border-radius: 15rpx; display: flex; align-items: center; background: #eaf1ff; color: #1e5ed1; font-size: 19rpx; font-weight: 600; }
+.info-grid { margin-top: 24rpx; padding: 20rpx; border-radius: 25rpx; display: flex; background: #fff; box-shadow: 0 8rpx 22rpx rgba(31,60,103,.05); }
+.info-item { flex: 1; display: flex; flex-direction: column; }
+.info-item + .info-item { border-left: 1rpx solid #edf1f6; padding-left: 22rpx; }
+.info-label { font-size: 18rpx; color: #929eaf; }
+.info-value { margin-top: 7rpx; font-size: 22rpx; font-weight: 650; color: #354a63; }
+.detail-block { margin-top: 28rpx; }
+.block-title { display: block; font-size: 26rpx; font-weight: 780; color: #1e324d; }
+.block-text { display: block; margin-top: 12rpx; font-size: 23rpx; line-height: 1.75; color: #6f7d90; }
+.facility-row { margin-top: 13rpx; display: flex; flex-wrap: wrap; gap: 10rpx; }
+.facility { padding: 10rpx 16rpx; border-radius: 16rpx; background: #fff; color: #586a80; font-size: 20rpx; }
+.tip-card { margin-top: 28rpx; padding: 20rpx; border-radius: 24rpx; display: flex; background: #fff8e9; }
+.tip-icon { width: 40rpx; height: 40rpx; flex: 0 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f0a51b; color: #fff; font-size: 20rpx; font-weight: 800; }
+.tip-card > view:last-child { flex: 1; margin-left: 14rpx; display: flex; flex-direction: column; }
+.tip-title { font-size: 22rpx; font-weight: 700; color: #795a20; }
+.tip-text { margin-top: 6rpx; font-size: 20rpx; line-height: 1.6; color: #997844; }
+.detail-bottom-space { height: 20rpx; }
+.detail-actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; padding: 18rpx 28rpx calc(18rpx + env(safe-area-inset-bottom)); display: flex; gap: 16rpx; background: rgba(255,255,255,.97); box-shadow: 0 -8rpx 30rpx rgba(31,60,103,.09); }
+.system-detail { flex: 0 0 210rpx; height: 88rpx; gap: 9rpx; }
+.detail-route { flex: 1; height: 88rpx; }

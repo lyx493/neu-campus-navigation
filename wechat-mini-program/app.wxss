@@ -1,0 +1,138 @@
+page {
+  min-height: 100%;
+  background: #f5f7fb;
+  color: #17263c;
+  font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  font-size: 28rpx;
+}
+
+view, text, input, button, scroll-view, map, picker {
+  box-sizing: border-box;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  line-height: normal;
+  font-size: inherit;
+  color: inherit;
+}
+
+button::after {
+  border: none;
+}
+
+.page {
+  min-height: 100vh;
+  padding-bottom: calc(150rpx + env(safe-area-inset-bottom));
+}
+
+.status-spacer {
+  height: calc(env(safe-area-inset-top) + 16rpx);
+}
+
+.floating-card {
+  border: 1rpx solid rgba(30, 67, 115, 0.08);
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 16rpx 44rpx rgba(31, 60, 103, 0.14);
+}
+
+.primary-btn {
+  height: 94rpx;
+  border-radius: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  background: #1e66e8;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  box-shadow: 0 12rpx 28rpx rgba(30, 102, 232, 0.24);
+}
+
+.primary-btn:active {
+  opacity: 0.92;
+  transform: scale(0.99);
+}
+
+.secondary-btn {
+  height: 82rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #edf3ff;
+  color: #1e5bc9;
+  font-size: 27rpx;
+  font-weight: 650;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #15243a;
+  letter-spacing: -0.5rpx;
+}
+
+.section-link {
+  font-size: 23rpx;
+  color: #8290a3;
+}
+
+.icon-btn {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.96);
+  color: #263b58;
+  font-size: 32rpx;
+  box-shadow: 0 8rpx 24rpx rgba(31, 60, 103, 0.12);
+}
+
+.empty-state {
+  padding: 100rpx 36rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.empty-mark {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaf1ff;
+  color: #3971d9;
+  font-size: 48rpx;
+  margin-bottom: 28rpx;
+}
+
+.empty-title {
+  font-size: 31rpx;
+  font-weight: 750;
+  color: #233854;
+}
+
+.empty-desc {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: #8592a5;
+}

@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>东北大学浑南校区 · 校园导航</title>
+  <link rel="stylesheet" href="./styles.css?v=20261020-16">
+</head>
+<body>
+  <main class="showcase">
+    <aside class="showcase-copy">
+      <div class="showcase-brand">
+        <div class="showcase-logo"><span></span></div>
+        <div><b>NEU CAMPUS</b><small>INTERACTIVE WEB PREVIEW</small></div>
+      </div>
+      <p class="eyebrow">校园导航 · 网页版</p>
+      <h1>东北大学<br><span>浑南校区导航</span></h1>
+      <p class="intro">真实校园地图与步道路网，支持持续 GPS、室内校准、方向与步态推算，路线规划和转向提示都可直接体验。</p>
+      <div class="feature-grid">
+        <div><i>◎</i><b>室内增强</b><span>GPS + 步态校准</span></div>
+        <div><i>➤</i><b>路线导航</b><span>步道最短路径</span></div>
+        <div><i>↰</i><b>转向提示</b><span>动态剩余距离</span></div>
+        <div><i>◎</i><b>校园地点</b><span>19 个真实地标</span></div>
+      </div>
+      <div class="showcase-actions">
+        <button id="desktopLocate" class="side-primary">体验室内定位</button>
+        <button id="fullscreenToggle" class="side-secondary">全屏预览</button><button id="mobileTest" class="side-secondary">手机测试</button>
+      </div>
+      <div class="demo-note"><span class="demo-dot"></span> 拖动地图会暂停自动跟随；点击定位按钮即可恢复。</div>
+    </aside>
+
+    <section class="phone-shell" id="phoneShell">
+      <div class="phone-status">
+        <span id="clock">09:41</span>
+        <div class="phone-status-icons"><span>●</span><span>◒</span><span class="battery"></span></div>
+      </div>
+      <div class="app" id="app">
+        <div class="map-viewport" id="mapViewport">
+          <div class="map-world" id="mapWorld">
+            <img id="mapImage" src="./assets/map/campus-map.jpg" alt="东北大学浑南校区地图">
+          </div>
+          <svg class="route-svg" id="routeSvg" aria-hidden="true"></svg>
+          <div class="markers-layer" id="markersLayer"></div>
+          <div class="user-marker" id="userMarker" title="当前位置"><span class="user-accuracy" id="userAccuracy"></span><span class="user-place-label" id="userPlaceLabel" hidden></span>
+            <span class="user-pulse"></span>
+            <span class="user-core"></span>
+            <span class="user-heading" id="userHeading"></span>
+          </div>
+        </div>
+        <div class="map-tint"></div>
+
+        <header class="top-panel" id="homeTop">
+          <div class="brand-row">
+            <div class="brand-lockup">
+              <div class="brand-mark"><span></span></div>
+              <div class="brand-copy"><b>东北大学 · 浑南校区</b><small>CAMPUS NAVIGATOR</small></div>
+            </div>
+            <button class="live-pill demo" id="locationPill"><i></i><span>演示定位</span></button>
+          </div>
+          <button class="search-bar" id="openSearch">
+            <span class="search-glyph">⌕</span>
+            <span class="search-placeholder">搜索图书馆、食堂、教学楼...</span>
+            <span class="search-action">搜索</span>
+          </button>
+          <div class="category-row" id="categoryRow"></div>
+        </header>
+
+        <div class="map-controls" id="mapControls">
+          <button class="map-control primary" id="locateButton" title="定位">⌖</button><button class="map-control indoor-control" id="indoorButton" title="室内定位">◎</button>
+          <button class="map-control" id="zoomIn" title="放大">＋</button>
+          <button class="map-control" id="zoomOut" title="缩小">−</button>
+        </div>
+
+        <div class="map-source">© OpenStreetMap · 东北大学浑南校区</div>
+
+        <section class="bottom-sheet home-sheet" id="homeSheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-head">
+            <div><b>附近地点</b><span id="nearbyCount">4 个校园地标</span></div>
+            <button class="position-state indoor-entry" id="sheetLocate"><i></i><span>室内导航 ›</span></button>
+          </div>
+          <div class="nearby-list" id="nearbyList"></div>
+        </section>
+
+        <section class="bottom-sheet selected-sheet" id="selectedSheet" hidden>
+          <div class="sheet-handle"></div>
+          <div class="selected-head">
+            <div class="poi-icon" id="selectedIcon">▤</div>
+            <div class="selected-copy"><div><b id="selectedName">图书馆</b><span id="selectedDistance">200米</span></div><small id="selectedMeta">学习空间 · 自习座位</small></div>
+            <button class="close-mini" id="closeSelected">×</button>
+          </div>
+          <div class="selected-info"><div><small>开放时间</small><b id="selectedOpen">07:30 - 22:30</b></div><div><small>楼层 / 区域</small><b id="selectedFloor">共 5 层</b></div></div>
+          <div class="selected-actions"><button class="ghost-btn" id="detailButton">查看详情</button><button class="primary-button" id="routeButton"><span>➤</span>开始导航</button></div>
+        </section>
+
+        <section class="route-setup floating-card" id="routeSetup" hidden>
+          <div class="route-setup-head"><div><b>校园路线</b><small>东北大学 · 浑南校区</small></div><button class="close-route" id="closeRoute">×</button></div>
+          <div class="endpoint-row"><i class="endpoint-dot start"></i><div><small>起点</small><b id="routeStartName">演示位置</b></div><button id="relocateRoute">重新定位</button></div>
+          <div class="endpoint-line"></div>
+          <div class="endpoint-row destination"><i class="endpoint-dot end"></i><div class="destination-field"><small>目的地</small><select id="destinationSelect"></select></div></div>
+          <div class="room-destination" id="roomDestination" hidden>
+            <div class="room-destination-head"><span>一号楼室内子地点</span><div class="room-floor-tabs" id="roomDestFloors"></div></div>
+            <select id="roomDestinationSelect" aria-label="选择一号楼教室"></select>
+          </div>
+
+          <div class="mode-row"><div class="mode-tabs"><button data-mode="walk" class="mode-tab active"><i>步</i>步行</button><button data-mode="bike" class="mode-tab"><i>骑</i>骑行</button></div><button class="map-pick" id="centerDestination">⌖ 地图选点</button></div>
+        </section>
+
+        <section class="nav-instruction" id="navInstruction" hidden>
+          <div class="nav-arrow" id="navArrow">↑</div>
+          <div class="nav-copy"><b id="navTitle">沿蓝色路线前进</b><small id="navDetail">前方 120 米右转</small></div>
+          <strong id="navDistance">120米</strong>
+        </section>
+
+        <section class="indoor-nav-card" id="indoorNavCard" hidden>
+          <div class="indoor-nav-head">
+            <div><b>室内路线图</b><small id="indoorNavSummary">2F教室 → 楼梯 → 1F出口</small></div>
+            <div class="indoor-floor-tabs"><span id="navFloor2" class="active">2F</span><span id="navFloor1">1F</span></div>
+          </div>
+          <div class="indoor-compass-hud" id="indoorCompassHud">
+            <div class="compass-ring"><span class="compass-n">N</span><i id="compassNeedle"></i></div>
+            <div class="compass-copy"><b id="compassHeading">--</b><small id="compassStatus">方向未开启</small></div>
+            <button id="calibrateCompass">校准方向</button><button id="openPositionFix">修正位置</button>
+          </div>
+          <div class="indoor-nav-scroll" id="indoorNavScroll">
+            <div class="indoor-nav-plan" id="indoorNavPlan">
+              <img id="indoorNavSource" class="indoor-nav-source" alt="室内标准化地图">
+              <canvas id="indoorNavCanvas" class="indoor-nav-canvas"></canvas>
+              <svg id="indoorNavRouteSvg" class="indoor-nav-route-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+              <div id="indoorNavDot" class="indoor-nav-dot"><span id="indoorNavHeadingArrow" class="indoor-nav-heading-arrow"></span></div>
+            </div>
+          </div>
+          <div class="indoor-step-row"><i id="indoorStepIcon">↱</i><div><b id="indoorStepTitle">沿2F走廊前往楼梯</b><small id="indoorStepDetail">到达楼梯后下到1F</small></div><strong id="indoorStepDistance">--</strong></div>
+        </section>
+
+        <section class="bottom-sheet route-sheet" id="routeSheet" hidden>
+          <div class="sheet-handle"></div>
+          <div class="route-summary">
+            <div><div class="distance-line"><b id="routeDistance">--</b><span>全程</span></div><small id="routeDuration">正在规划 · 校园路线</small></div>
+            <div class="eta-box"><small>预计用时</small><b id="routeEta">--</b></div>
+          </div>
+          <div class="route-hint"><i>↑</i><span id="routeStartInstruction">正在生成校园路线</span><button id="toggleSteps">路线详情</button></div>
+          <div class="steps-list" id="stepsList" hidden></div>
+          <div class="route-actions"><button class="ghost-btn external-nav" id="externalNav">↗ 百度地图</button><button class="primary-button" id="startNavigation"><span>➤</span><b id="startNavText">开始步行导航</b></button></div>
+          <div class="route-source" id="routeSourceNote">校园内部实时导航 · 出楼确认后切换百度地图</div>
+        </section>
+
+        <section class="bottom-sheet nav-panel" id="navPanel" hidden>
+          <button class="nav-sheet-toggle" id="navSheetToggle"><span></span><small id="navSheetHint">上拉展开</small></button>
+          <div class="nav-metrics"><div class="metric-main"><b id="navRemaining">--</b><small>剩余距离</small></div><div class="metric-divider"></div><div><b id="navEta">--</b><small>预计用时</small></div><div class="following"><i></i><small id="followMode">演示跟随</small></div></div>
+          <div class="outdoor-switch-inline" id="outdoorSwitch">
+            <div class="outdoor-switch-copy"><i>⌂ → ↗</i><span><b>是否已经离开一号楼？</b><small>确认后切换到百度地图继续室外导航</small></span></div>
+            <div class="outdoor-switch-actions"><button class="still-inside" id="cancelOutdoorInline">仍在室内</button><button class="outside-now" id="confirmOutdoorInline">已到室外</button></div>
+          </div>
+          <div class="next-action"><div id="nextArrow">↑</div><div><b id="nextTitle">继续沿路线前进</b><small id="nextDestination">目的地：图书馆</small></div><strong id="nextDistance">--</strong></div>
+          <div class="nav-buttons"><button class="next-indoor-step" id="indoorNextStep" hidden>我已到楼梯，下一层</button><button class="end-button" id="endNavigation">结束导航</button></div>
+        </section>
+
+        <section class="content-screen" id="favoritesScreen" hidden>
+          <div class="content-header"><div><h2>我的收藏</h2><p>常用校园地点，一触即达</p></div><span id="favoriteCount">0</span></div>
+          <div class="favorite-list" id="favoriteList"></div>
+          <div class="content-section-title"><b>最近到访</b><small>RECENT</small></div>
+          <div class="recent-list" id="recentList"></div>
+        </section>
+
+        <section class="content-screen profile-screen" id="profileScreen" hidden>
+          <div class="profile-hero"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="profile-top"><h2>我的</h2><span>东北大学</span></div><div class="user-row"><div class="avatar">林</div><div><b>林同学</b><small>东北大学 · 浑南校区</small></div><button>编辑</button></div></div>
+          <div class="stats-card"><div><b id="profileRoutes">12</b><small>导航次数</small></div><i></i><div><b id="profileFavorites">0</b><small>收藏地点</small></div><i></i><div><b>16</b><small>校园地标</small></div></div>
+          <button class="campus-card" id="profileCampus"><div>NEU</div><span><b>东北大学浑南校区</b><small>辽宁省沈阳市浑南区创新路195号</small></span><strong>↗</strong></button>
+          <div class="profile-menu"><button data-debug="1"><i>◎</i><span>手机诊断</span><b>›</b></button><button data-tip="校园卡功能即将开放"><i>▣</i><span>校园卡</span><b>›</b></button><button data-tip="已记录你的最近到访地点"><i>◷</i><span>最近到访</span><b>›</b></button><button data-tip="网页演示版 v1.0"><i>i</i><span>关于校园导航</span><b>›</b></button></div>
+        </section>
+
+        <div class="calibration-tip" id="calibrationTip" hidden>
+          <div><b>校准你所在的位置</b><small>点击地图上你当前所在的位置</small></div>
+          <button id="cancelCalibration">取消</button>
+        </div>
+
+        <section class="indoor-calibration" id="indoorCalibration" hidden>
+          <div class="cal-head"><div><b>室内精确校准</b><small>一号楼 1F / 2F · 点击实际房间选择</small></div><button id="calClose">×</button></div>
+          <div class="cal-section-label">所在楼栋</div>
+          <div class="cal-building-row" id="calBuildings"></div>
+          <div class="cal-section-label">所在楼层</div>
+          <div class="cal-floor-row" id="calFloors"></div>
+          <div class="floorplan">
+            <div class="floorplan-title"><span id="calFloorPlanTitle">一号楼 · 3F</span><small>点击选择教室或区域</small></div>
+            <div class="floorplan-scroll">
+              <div class="floorplan-image-wrap">
+                <img id="calFloorImage" class="cal-floor-source" src="./assets/indoor/building1-1f.jpg" alt="一号楼一层平面图"><canvas id="calFloorCanvas" class="cal-floor-image" width="720" height="578"></canvas>
+                <div class="cal-hotspots" id="calRooms"></div>
+              </div>
+            </div>
+            <div class="floorplan-help">可左右滑动平面图 · 点击房间标签选择教室</div>
+          </div>
+          <div class="cal-summary"><i>⌖</i><div><small>已选位置</small><b id="calSelected">一号楼 · 3F · 305教室</b></div></div>
+          <div class="cal-actions"><button class="cal-cancel" id="calCancel">取消</button><button class="cal-map-btn" id="calUseMap">地图点选</button><button class="cal-confirm" id="calConfirm">确认位置</button></div>
+        </section>
+        <section class="position-fix-panel" id="positionFixPanel" hidden>
+          <div class="position-fix-head"><div><b>修正当前位置</b><small>传感器只能估算，请选择你实际到达的位置</small></div><button id="closePositionFix">×</button></div>
+          <div class="position-fix-list" id="positionFixList"></div>
+          <div class="position-fix-tools">
+            <button id="pickOnMap">⌖ 在平面图上点我</button>
+            <div class="step-length-group"><span>步长</span><button class="step-length-btn" data-step-length="0.5">短</button><button class="step-length-btn active" data-step-length="0.64">标准</button><button class="step-length-btn" data-step-length="0.78">长</button></div>
+          </div>
+          <div class="position-fix-actions"><button id="nudgeBack">−2米</button><button id="resetSteps">重新计步</button><button id="nudgeForward">+2米</button></div>
+          <div class="position-fix-note">室内连续精准定位需要蓝牙信标、Wi-Fi 指纹或 UWB 数据；当前使用路线节点校准降低累计误差。</div>
+        </section>
+
+        <section class="indoor-panel" id="indoorPanel" hidden>
+          <div class="indoor-head"><div><b>室内定位增强</b><small>GPS 较弱时使用传感器与手动校准</small></div><button id="closeIndoor">×</button></div>
+          <div class="indoor-status-row">
+            <div><i class="status-dot" id="indoorStatusDot"></i><span id="indoorModeText">演示位置</span></div>
+            <div><small>定位精度</small><b id="indoorAccuracy">--</b></div>
+            <div><small>已走步数</small><b id="indoorSteps">0</b></div>
+          </div>
+          <div class="indoor-note" id="indoorNote">室内 GPS 经常漂移。先校准地图位置，再开启方向与运动传感器，即可通过步态推算实时移动。</div>
+          <div class="indoor-actions">
+            <button class="indoor-primary" id="enableIndoor">开启室内辅助</button>
+            <button class="indoor-secondary" id="calibratePosition">校准位置</button>
+            <button class="indoor-secondary" id="tryGps">尝试 GPS</button>
+          </div>
+          <button class="indoor-route-btn" id="indoorPlanRoute">规划室内路线 →</button>
+          <div class="manual-pad" id="manualPad">
+            <button class="pad-up" data-move="north">↑</button>
+            <button class="pad-left" data-move="west">←</button>
+            <button class="pad-center" id="calibrateCenter">校准</button>
+            <button class="pad-right" data-move="east">→</button>
+            <button class="pad-down" data-move="south">↓</button>
+          </div>
+          <div class="sensor-help">室内模式需要手机方向/运动传感器；桌面浏览器可使用方向键或上方校准按钮。</div>
+        </section>
+        <section class="search-overlay" id="searchOverlay" hidden>
+          <div class="search-head"><div class="search-field"><span>⌕</span><input id="searchInput" placeholder="搜索校园地点" autocomplete="off"><button id="clearSearch">×</button></div><button id="closeSearch">取消</button></div>
+          <div class="search-meta"><span>东北大学浑南校区</span><small id="searchCount">19 个结果</small></div>
+          <div class="search-results" id="searchResults"></div>
+        </section>
+
+        <section class="detail-overlay" id="detailOverlay" hidden>
+          <button class="detail-back" id="detailBack">‹</button>
+          <div class="detail-tint"></div>
+          <div class="detail-body">
+            <div class="sheet-handle"></div>
+            <div class="detail-title-row"><div class="poi-icon large" id="detailIcon">▤</div><div><h2 id="detailName">图书馆</h2><p id="detailSubtitle">知识在这里生长</p></div><button class="favorite-toggle" id="favoriteToggle">♡</button></div>
+            <div class="tag-row" id="detailTags"></div>
+            <div class="selected-info detail-info"><div><small>开放时间</small><b id="detailOpen">07:30 - 22:30</b></div><div><small>楼层 / 区域</small><b id="detailFloor">共 5 层</b></div></div>
+            <div class="detail-block"><b>地点介绍</b><p id="detailDescription"></p></div>
+            <div class="detail-block"><b>设施服务</b><div class="facility-row" id="detailFacilities"></div></div>
+            <div class="tip-card"><i>i</i><div><b>校园小贴士</b><p id="detailTips"></p></div></div>
+            <div class="detail-actions"><button class="ghost-btn" id="detailExternal">↗ 百度地图</button><button class="primary-button" id="detailRoute">➤ 到这里去</button></div>
+          </div>
+        </section>
+
+        <button class="debug-fab" id="debugFab" hidden title="打开诊断">!</button>
+        <section class="debug-panel" id="debugPanel" hidden>
+          <div class="debug-head"><div><b>手机测试诊断</b><small>定位、传感器与地图状态</small></div><button id="closeDebug">×</button></div>
+          <div class="debug-grid">
+            <div><small>安全环境</small><b id="debugSecure">--</b></div>
+            <div><small>GPS 支持</small><b id="debugGeoSupport">--</b></div>
+            <div><small>GPS 精度</small><b id="debugAccuracy">--</b></div>
+            <div><small>运动传感器</small><b id="debugMotion">--</b></div>
+            <div><small>方向传感器</small><b id="debugOrientation">--</b></div>
+            <div><small>地图拖动</small><b id="debugDrag">--</b></div>
+            <div><small>定位模式</small><b id="debugMode">--</b></div>
+            <div><small>屏幕尺寸</small><b id="debugViewport">--</b></div>
+          </div>
+          <div class="debug-log" id="debugLog"></div>
+          <div class="debug-actions"><button id="copyDebug">复制诊断信息</button><button id="closeDebugBottom">关闭</button></div>
+        </section>
+        <div class="outdoor-confirm" id="outdoorConfirm" hidden>
+          <div class="outdoor-confirm-icon">⌂ → ↗</div>
+          <h2>你已经到达室外了吗？</h2>
+          <p>确认后将停止室内推算，并自动打开百度地图继续室外导航，直到目的地。</p>
+          <div class="outdoor-confirm-actions">
+            <button id="cancelOutdoor" class="stay-indoor">还在室内</button>
+            <button id="confirmOutdoor" class="go-outdoor">已到室外，打开百度地图</button>
+          </div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+        <div class="arrival-modal" id="arrivalModal" hidden><div class="arrival-icon">✓</div><h2>已到达目的地</h2><p id="arrivalText">你已到达图书馆</p><button id="arrivalClose">完成</button></div>
+
+        <nav class="tabbar">
+          <button class="tab active" data-tab="map"><i>⌖</i><span>地图</span></button>
+          <button class="tab" data-tab="route"><i>➤</i><span>导航</span></button>
+          <button class="tab" data-tab="indoor"><i>▦</i><span>室内</span></button><button class="tab" data-tab="favorites"><i>♡</i><span>收藏</span></button>
+          <button class="tab" data-tab="profile"><i>◉</i><span>我的</span></button>
+        </nav>
+      </div>
+    </section>
+  </main>
+  <script src="./data.js?v=20261020-16"></script>
+  <script src="./walk-graph.js?v=20261020-16"></script>
+  <script src="./nav-engine.js?v=20261020-16"></script>
+  <script src="./app.js?v=20261020-16"></script>
+</body>
+</html>

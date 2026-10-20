@@ -1,0 +1,191 @@
+<view class="home-page">
+  <map
+    id="homeMap"
+    class="map-canvas"
+    latitude="{{mapCenter.latitude}}"
+    longitude="{{mapCenter.longitude}}"
+    scale="{{mapScale}}"
+    markers="{{markers}}"
+    show-location
+    enable-zoom
+    enable-scroll
+    enable-rotate="{{false}}"
+    show-compass="{{false}}"
+    bindmarkertap="onMarkerTap"
+  ></map>
+
+  <view class="map-top-shade"></view>
+
+  <view class="top-panel">
+    <view class="status-spacer"></view>
+    <view class="brand-row">
+      <view class="brand-lockup" bindtap="openCampusInfo">
+        <view class="brand-mark">
+          <view class="brand-compass"></view>
+        </view>
+        <view class="brand-copy">
+          <view class="brand-name">东北大学 · 浑南校区</view>
+          <view class="brand-sub">CAMPUS NAVIGATOR</view>
+        </view>
+      </view>
+      <view class="live-pill {{locationReady ? 'online' : ''}}" bindtap="handlePermissionHelp">
+        <view class="live-dot"></view>
+        <text>{{locationReady ? '定位中' : '未定位'}}</text>
+      </view>
+    </view>
+
+    <view class="search-bar" bindtap="openSearch">
+      <text class="search-icon">⌕</text>
+      <text class="search-placeholder">搜索图书馆、食堂、教学楼...</text>
+      <view class="search-shortcut">搜索</view>
+    </view>
+
+    <scroll-view class="category-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="category-row">
+        <view
+          wx:for="{{categories}}"
+          wx:key="id"
+          class="category-chip {{currentCategory === item.id ? 'active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onCategoryTap"
+        >
+          <text class="category-icon">{{item.icon}}</text>
+          <text>{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view wx:if="{{outsideCampus && locationReady}}" class="outside-banner" bindtap="locateMe">
+    <text class="outside-icon">!</text>
+    <view class="outside-copy">
+      <text class="outside-title">你当前距学校 {{campusDistanceText}}</text>
+      <text class="outside-desc">地图已回到浑南校区，点击重新定位</text>
+    </view>
+  </view>
+
+  <view class="map-controls">
+    <view class="map-control primary" bindtap="locateMe">
+      <text class="control-symbol">⌖</text>
+    </view>
+    <view class="map-control" bindtap="toggleMapLayer">
+      <text class="control-symbol small">▦</text>
+    </view>
+  </view>
+
+  <view wx:if="{{mapLoading}}" class="map-loading">
+    <view class="loading-spinner"></view>
+    <text>正在获取你的实时位置</text>
+  </view>
+
+  <view wx:if="{{selectedLocation}}" class="bottom-card selected-card floating-card">
+    <view class="sheet-handle"></view>
+    <view class="selected-top">
+      <view class="poi-icon" style="background: {{selectedLocation.softColor}}; color: {{selectedLocation.color}};">
+        {{selectedLocation.emoji}}
+      </view>
+      <view class="selected-copy">
+        <view class="selected-title-row">
+          <text class="selected-title">{{selectedLocation.name}}</text>
+          <text class="poi-distance">{{selectedLocation.distanceText}}</text>
+        </view>
+        <text class="selected-subtitle">{{selectedLocation.subtitle}} · {{selectedLocation.categoryName}}</text>
+      </view>
+      <view class="close-mini" bindtap="clearSelectedLocation">×</view>
+    </view>
+    <view class="selected-meta">
+      <view class="meta-item">
+        <text class="meta-label">开放时间</text>
+        <text class="meta-value">{{selectedLocation.open}}</text>
+      </view>
+      <view class="meta-divider"></view>
+      <view class="meta-item">
+        <text class="meta-label">位置</text>
+        <text class="meta-value">{{selectedLocation.floor}}</text>
+      </view>
+    </view>
+    <view class="selected-actions">
+      <view class="secondary-btn detail-action" bindtap="openDetail">查看详情</view>
+      <button class="primary-btn route-action" bindtap="startRoute">
+        <text class="route-arrow">➤</text>
+        <text>开始导航</text>
+      </button>
+    </view>
+  </view>
+
+  <view wx:else class="bottom-card nearby-card floating-card">
+    <view class="sheet-handle"></view>
+    <view class="nearby-head">
+      <view>
+        <text class="nearby-title">附近地点</text>
+        <text class="nearby-count">{{nearby.length}} 个校园地标</text>
+      </view>
+      <view class="location-state" bindtap="locateMe">
+        <view class="state-dot {{locationReady ? 'ready' : ''}}"></view>
+        <text>{{locationStatus}}</text>
+      </view>
+    </view>
+    <view class="nearby-list">
+      <view
+        wx:for="{{nearby}}"
+        wx:key="id"
+        class="nearby-item"
+        data-id="{{item.id}}"
+        bindtap="onNearbyTap"
+      >
+        <view class="nearby-icon" style="background: {{item.softColor}}; color: {{item.color}};">{{item.emoji}}</view>
+        <view class="nearby-copy">
+          <text class="nearby-name">{{item.name}}</text>
+          <text class="nearby-desc">{{item.categoryName}} · {{item.tags[0]}}</text>
+        </view>
+        <view class="nearby-distance">{{item.distanceText}}</view>
+        <view class="nearby-chevron">›</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showSearch}}" class="search-overlay" catchtap="noop">
+    <view class="status-spacer"></view>
+    <view class="search-head">
+      <view class="search-input-wrap">
+        <text class="search-icon">⌕</text>
+        <input
+          class="search-input"
+          value="{{keyword}}"
+          focus="{{showSearch}}"
+          placeholder="搜索校园地点"
+          confirm-type="search"
+          bindinput="onSearchInput"
+        />
+        <view wx:if="{{keyword}}" class="clear-input" catchtap="closeSearch">×</view>
+      </view>
+      <view class="cancel-search" catchtap="closeSearch">取消</view>
+    </view>
+    <view class="search-tip-row">
+      <text class="search-tip">东北大学浑南校区</text>
+      <text class="search-count">{{searchResults.length}} 个结果</text>
+    </view>
+    <scroll-view class="search-results" scroll-y enhanced>
+      <view
+        wx:for="{{searchResults}}"
+        wx:key="id"
+        class="result-item"
+        data-id="{{item.id}}"
+        catchtap="onSearchResultTap"
+      >
+        <view class="result-icon" style="background: {{item.softColor}}; color: {{item.color}};">{{item.emoji}}</view>
+        <view class="result-copy">
+          <view class="result-name">{{item.name}}</view>
+          <view class="result-meta">{{item.categoryName}} · {{item.tags[0]}}</view>
+        </view>
+        <view class="result-go">➤</view>
+      </view>
+      <view wx:if="{{searchResults.length === 0}}" class="empty-state">
+        <view class="empty-mark">⌕</view>
+        <text class="empty-title">没有找到相关地点</text>
+        <text class="empty-desc">试试搜索“图书馆”“食堂”或“南门”</text>
+      </view>
+      <view class="search-bottom-space"></view>
+    </scroll-view>
+  </view>
+</view>

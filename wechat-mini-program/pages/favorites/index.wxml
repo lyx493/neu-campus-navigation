@@ -1,0 +1,37 @@
+<view class="page favorites-page">
+  <view class="status-spacer"></view>
+  <view class="fav-header">
+    <view>
+      <text class="header-title">我的收藏</text>
+      <text class="header-sub">常用校园地点，一触即达</text>
+    </view>
+    <view class="fav-count">{{favorites.length}}</view>
+  </view>
+  <view wx:if="{{favorites.length}}" class="fav-list">
+    <view wx:for="{{favorites}}" wx:key="id" class="fav-card">
+      <view class="fav-icon" style="background: {{item.softColor}}; color: {{item.color}};">{{item.emoji}}</view>
+      <view class="fav-copy" data-id="{{item.id}}" bindtap="openDetail">
+        <text class="fav-name">{{item.name}}</text>
+        <text class="fav-meta">{{item.categoryName}} · 距你{{item.distanceText}}</text>
+      </view>
+      <view class="fav-route" data-id="{{item.id}}" bindtap="startRoute">导航</view>
+    </view>
+  </view>
+  <view wx:else class="empty-state">
+    <view class="empty-mark">♡</view>
+    <text class="empty-title">还没有收藏地点</text>
+    <text class="empty-desc">在地图或地点详情中点亮爱心，常用地点会出现在这里</text>
+    <view class="empty-btn" bindtap="goHome">去地图看看</view>
+  </view>
+  <view wx:if="{{recent.length}}" class="recent-section">
+    <view class="section-head"><text class="section-title">最近到访</text><text class="section-link">最近使用</text></view>
+    <view class="recent-list">
+      <view wx:for="{{recent}}" wx:key="id" class="recent-item" data-id="{{item.id}}" bindtap="openDetail">
+        <view class="recent-icon" style="background: {{item.softColor}}; color: {{item.color}};">{{item.emoji}}</view>
+        <text class="recent-name">{{item.name}}</text>
+        <text class="recent-distance">{{item.distanceText}}</text>
+        <text class="recent-arrow">›</text>
+      </view>
+    </view>
+  </view>
+</view>

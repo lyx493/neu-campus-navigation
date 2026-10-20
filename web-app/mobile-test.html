@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>手机测试入口 · 东大浑南校园导航</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;padding:42px 24px;font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;color:#17263c;background:radial-gradient(circle at 15% 15%,rgba(68,125,255,.22),transparent 28%),linear-gradient(145deg,#071326,#112746 58%,#08172c);display:flex;align-items:center;justify-content:center}.card{width:min(900px,100%);padding:38px;border-radius:30px;background:#f7f9fd;box-shadow:0 35px 90px rgba(0,0,0,.35);display:grid;grid-template-columns:330px 1fr;gap:38px;align-items:center}.qr-wrap{text-align:center}.qr{width:100%;max-width:300px;display:block;margin:auto;border-radius:18px;background:#fff;box-shadow:0 14px 38px rgba(31,60,103,.16)}.qr-wrap p{margin:16px 0 0;color:#7b899c;font-size:12px}.eyebrow{margin:0 0 12px;color:#1e66e8;font-size:11px;font-weight:800;letter-spacing:2.5px}.content h1{margin:0;font-size:36px;line-height:1.15;letter-spacing:-2px}.content h1 span{color:#1e66e8}.lead{margin:16px 0 22px;color:#6f7e92;font-size:14px;line-height:1.8}.url{padding:12px 14px;border-radius:12px;background:#eaf1ff;color:#1d5fd6;font-size:11px;word-break:break-all;text-decoration:none;display:block;font-family:Consolas,monospace}.steps{margin:22px 0 0;padding:0;list-style:none;counter-reset:step}.steps li{counter-increment:step;position:relative;padding:0 0 14px 38px;color:#52647b;font-size:13px;line-height:1.55}.steps li:before{content:counter(step);position:absolute;left:0;top:-2px;width:25px;height:25px;border-radius:9px;background:#1e66e8;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}.warn{margin-top:16px;padding:12px 14px;border-radius:12px;background:#fff8e9;color:#7d602c;font-size:11px;line-height:1.65}.actions{display:flex;gap:10px;margin-top:20px}.actions a{height:42px;padding:0 17px;border-radius:12px;display:flex;align-items:center;text-decoration:none;font-size:12px;font-weight:700}.primary{background:#1e66e8;color:#fff}.secondary{background:#eaf0f8;color:#4c617a}@media(max-width:720px){body{padding:16px}.card{grid-template-columns:1fr;padding:24px;gap:24px}.content h1{font-size:30px}.qr{max-width:260px}}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="qr-wrap">
+      <img class="qr" src="./assets/mobile-test-qr.png" alt="手机测试二维码">
+      <p>使用手机相机扫码</p>
+    </div>
+    <section class="content">
+      <p class="eyebrow">MOBILE TEST · HTTPS</p>
+      <h1>手机扫码测试<br><span>室内导航与标准化地图</span></h1>
+      <p class="lead">该地址为临时 HTTPS 链接，手机可直接调用精确定位、方向与运动传感器。</p>
+      <a class="url" href="https://shortcuts-garlic-rescue-physical.trycloudflare.com/?debug=1&v=20261020-16-9" target="_blank" rel="noopener">https://shortcuts-garlic-rescue-physical.trycloudflare.com/?debug=1&v=20261020-16-9</a>
+      <ol class="steps">
+        <li>扫码打开页面，先允许位置、方向和运动传感器权限。</li>
+        <li>点击底部“室内”→“校准位置”，选择一号楼 1F 或 2F。之后在“导航→目的地→一号楼”展开室内子地点，选择 1F/2F 具体教室。导航中可用“修正位置”点选实际位置、切换短/长步长、前后微调或重新计步。</li>
+        <li>在标准化平面图上点击教室，例如 A101、B215，然后确认位置。</li>
+        <li>点击“开启室内辅助”，导航会显示标准化楼层图、蓝色路线、当前位置箭头和指南针。可按当前路线方向校准指南针，底部面板可下拉收起。</li>
+        <li>从“我的 → 手机诊断”打开诊断面板，复制或截图诊断信息。</li>
+      </ol>
+      <div class="warn">临时隧道只用于本轮测试，关闭后会失效。室内定位采用校准点 + 方向/步态推算，楼层图已按你提供的 1F/2F 原始平面图转换为标准化地图。</div>
+      <div class="actions"><a class="primary" href="https://shortcuts-garlic-rescue-physical.trycloudflare.com/?debug=1&v=20261020-16-9" target="_blank">电脑上先打开诊断入口</a><a class="secondary" href="./">返回导航</a></div>
+    </section>
+  </main>
+</body>
+</html>

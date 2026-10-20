@@ -1,0 +1,21 @@
+.favorites-page { min-height: 100vh; padding: 0 28rpx calc(160rpx + env(safe-area-inset-bottom)); background: #f6f8fc; }
+.fav-header { padding: 30rpx 4rpx 34rpx; display: flex; align-items: center; justify-content: space-between; }
+.header-title { display: block; font-size: 48rpx; font-weight: 850; color: #14243a; letter-spacing: -1rpx; }
+.header-sub { display: block; margin-top: 10rpx; font-size: 23rpx; color: #8996a8; }
+.fav-count { width: 82rpx; height: 82rpx; border-radius: 28rpx; display: flex; align-items: center; justify-content: center; background: #e9f0ff; color: #1e66e8; font-size: 31rpx; font-weight: 800; }
+.fav-list { display: flex; flex-direction: column; gap: 16rpx; }
+.fav-card { padding: 20rpx; border-radius: 28rpx; display: flex; align-items: center; background: #fff; border: 1rpx solid rgba(31,60,103,.06); box-shadow: 0 10rpx 28rpx rgba(31,60,103,.06); }
+.fav-icon { width: 78rpx; height: 78rpx; flex: 0 0 auto; border-radius: 24rpx; display: flex; align-items: center; justify-content: center; font-size: 33rpx; font-weight: 700; }
+.fav-copy { flex: 1; min-width: 0; margin-left: 18rpx; display: flex; flex-direction: column; }
+.fav-name { font-size: 27rpx; font-weight: 750; color: #1c304a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fav-meta { margin-top: 7rpx; font-size: 20rpx; color: #8d99aa; }
+.fav-route { height: 58rpx; padding: 0 20rpx; border-radius: 18rpx; display: flex; align-items: center; background: #edf3ff; color: #1e66e8; font-size: 21rpx; font-weight: 700; }
+.empty-btn { margin-top: 30rpx; height: 72rpx; padding: 0 30rpx; border-radius: 22rpx; display: flex; align-items: center; background: #1e66e8; color: #fff; font-size: 23rpx; font-weight: 700; }
+.recent-section { margin-top: 40rpx; }
+.recent-list { border-radius: 28rpx; padding: 6rpx 20rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(31,60,103,.05); }
+.recent-item { min-height: 90rpx; display: flex; align-items: center; border-bottom: 1rpx solid #f0f3f7; }
+.recent-item:last-child { border-bottom: none; }
+.recent-icon { width: 54rpx; height: 54rpx; border-radius: 17rpx; display: flex; align-items: center; justify-content: center; font-size: 24rpx; }
+.recent-name { flex: 1; min-width: 0; margin-left: 15rpx; font-size: 23rpx; font-weight: 650; color: #2a3e58; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-distance { font-size: 19rpx; color: #8d99aa; }
+.recent-arrow { margin-left: 10rpx; color: #b6c0ce; font-size: 32rpx; }

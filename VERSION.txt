@@ -1,0 +1,5 @@
+Project: NEU Hunnan Campus Navigation
+Version: v16
+Build date: 2026-10-20
+Runtime: static web / browser sensors
+Web tunnel: https://shortcuts-garlic-rescue-physical.trycloudflare.com/?debug=1&v=20261020-16
