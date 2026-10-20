@@ -1,0 +1,22 @@
+name: Extract delivery package
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and commit source tree
+        run: |
+          rm -rf .delivery-temp
+          mkdir .delivery-temp
+          unzip -q neu-campus-navigation-delivery-v16.zip -d .delivery-temp
+          cp -R .delivery-temp/. .
+          rm -rf .delivery-temp
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Extract browsable source tree from delivery package" || exit 0
+          git push
