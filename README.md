@@ -75,5 +75,5 @@ python -m http.server 8765 --bind 127.0.0.1
 - 校园步道算法：`web-app/nav-engine.js`
 - 室内平面图：`web-app/assets/indoor/`
 - 微信小程序入口：`wechat-mini-program/pages/home/index`
-- 已知问题：`docs/KNOWN_ISSUES.md`
-- 下一步计划：`docs/ROADMAP.md`
+- 已知问题：`docs/04-已知问题.md`
+- 下一步计划：`docs/05-改进计划.md`
