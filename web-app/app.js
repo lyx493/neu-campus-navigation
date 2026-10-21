@@ -317,6 +317,20 @@
     const graph = INDOOR_ROUTE_GRAPHS[floor];
     return (ids || []).map(id => ({ x:graph.nodes[id].x, y:graph.nodes[id].y }));
   }
+  function indoorVerifiedRoute(floor, a, b) {
+    const record = INDOOR_VERIFIED_ROUTES.find(item =>
+      item.floor === floor &&
+      ((item.fromRoom === a.code && item.toRoom === b.code) || (item.fromRoom === b.code && item.toRoom === a.code))
+    );
+    if (!record) return null;
+    const forward = record.fromRoom === a.code;
+    const captured = forward ? record.points : record.points.slice().reverse();
+    return {
+      points: dedupePercent([{ x:a.x, y:a.y }, ...captured, { x:b.x, y:b.y }]),
+      distanceMeters: record.distanceMeters,
+      forward
+    };
+  }
   function indoorRoomRoute(floor, a, b) {
     const graph = INDOOR_ROUTE_GRAPHS[floor];
     const start = graph && graph.roomDoors[a && a.code];
@@ -471,8 +485,10 @@
     if (state.indoorDestination && destination.buildingId === 'building1') {
       const destRoom = building.roomsByFloor[destination.floor][destination.roomIndex];
       if (destination.floor === floor) {
-        const route = corridorRoute(room, destRoom, floor);
-        stageList.push({ floor, type:'room', route, distance:estimateRouteMeters(route), icon:'↱', title:`前往${destination.floor}F ${destination.roomCode}${destination.roomType}`, detail:`从${room.code}教室出发，沿${floor}F走廊前往${destination.roomCode}${destination.roomType}`, nextLabel:'我已到达目的地' });
+        const verified = indoorVerifiedRoute(floor, room, destRoom);
+        const route = verified ? verified.points : corridorRoute(room, destRoom, floor);
+        const routeDistance = verified ? verified.distanceMeters : estimateRouteMeters(route);
+        stageList.push({ floor, type:'room', route, distance:routeDistance, icon:'↱', title:`前往${destination.floor}F ${destination.roomCode}${destination.roomType}`, detail:`从${room.code}教室出发，沿${verified ? '实地采集的' : ''}${floor}F走廊前往${destination.roomCode}${destination.roomType}`, nextLabel:'我已到达目的地' });
         stageList.push({ floor, type:'arrive', route:[destRoom, destRoom], distance:0, icon:'终', title:`到达${destination.roomCode}${destination.roomType}`, detail:`目的地${destination.roomCode}${destination.roomType}就在附近`, nextLabel:'已到达' });
         return { mode:'indoor', floor, room, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → ${destination.floor}F ${destination.roomCode}` };
       }

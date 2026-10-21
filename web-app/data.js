@@ -131,6 +131,34 @@ const INDOOR_EXITS = [
   { id:'stair_northeast_exit', name:'东北侧楼梯出口', type:'stair', accessType:'stair', stairId:'northeast', x:90, y:20, confirmed:false, autoEligible:false, penalty:25 }
 ];
 
+
+
+// Routes captured on site by the project owner. These are authoritative over
+// inferred corridor geometry for the recorded start/end pair.
+const INDOOR_VERIFIED_ROUTES = [
+  {
+    id:'building1-a201-b227-20261021',
+    buildingId:'building1',
+    floor:2,
+    fromRoom:'A201',
+    toRoom:'B227',
+    distanceMeters:82,
+    recordedSteps:128,
+    recordedAt:'2026-10-21T13:12:50.822Z',
+    points:[
+      {x:54.03,y:85.05},
+      {x:47.74,y:79.40},
+      {x:69.99,y:73.63},
+      {x:81.64,y:70.37},
+      {x:80.94,y:54.86},
+      {x:80.47,y:41.26},
+      {x:82.80,y:28.75},
+      {x:80.94,y:17.87},
+      {x:73.72,y:13.79}
+    ]
+  }
+];
+
 const INDOOR_ROUTE_GRAPHS = {
   2: {
     nodes: {
@@ -171,7 +199,7 @@ const INDOOR_ROUTE_GRAPHS = {
       B216:{x:56.9,y:22.3,corridor:'T3'}, B217:{x:41.5,y:12.8,corridor:'U3'},
       B219:{x:47.5,y:12.8,corridor:'U4'}, B221:{x:53.0,y:12.8,corridor:'U5'},
       B223:{x:59.0,y:12.8,corridor:'U6'}, B225:{x:65.0,y:12.8,corridor:'U7'},
-      B227:{x:71.0,y:12.8,corridor:'U8'}, B229:{x:77.0,y:12.8,corridor:'U9'},
+      B227:{x:73.72,y:13.79,corridor:'U8'}, B229:{x:77.0,y:12.8,corridor:'U9'},
       B231:{x:83.0,y:12.8,corridor:'U10'}, B233:{x:89.5,y:12.8,corridor:'U11'}
     },
     stairs: {
