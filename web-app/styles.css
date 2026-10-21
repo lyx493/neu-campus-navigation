@@ -533,3 +533,12 @@ body.fullscreen .phone-shell { width: min(430px,100vw); height: 100vh; border: 0
 .indoor-nav-dot.external-position { background:#13a66f; box-shadow:0 0 0 7px rgba(19,166,111,.16),0 4px 12px rgba(17,90,65,.3); }
 .manual-calibrate-row { margin-top:10px; }
 .manual-calibrate-row button { width:100%; height:36px; border-radius:11px; background:#e8f0ff; color:#1e66e8; font-size:9px; font-weight:750; }
+
+
+/* multi-exit selector */
+.exit-choice { margin:7px 0 0 23px; padding:8px 9px; border-radius:11px; background:#eef6ff; border:1px solid #dbe9fa; }
+.exit-choice-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.exit-choice-head span { color:#315475; font-size:8px; font-weight:750; }
+.exit-choice-head small { color:#7990aa; font-size:7px; }
+#exitSelect { width:100%; height:32px; padding:0 8px; border:1px solid #d5e3f3; border-radius:8px; background:#fff; color:#28415e; font-size:9px; font-weight:650; }
+.exit-choice-note { display:block; margin-top:5px; color:#687d96; font-size:7px; line-height:1.45; }

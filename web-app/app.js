@@ -11,7 +11,7 @@
     tab:'map', category:'all', selectedId:null, detailId:null, mode:'walk', destinationId:'library', indoorDestination:null, roomDestFloor:1, roomDestIndex:0,
     current:{ lat:CAMPUS.demoStart.lat, lng:CAMPUS.demoStart.lng }, demo:true, heading:null,
     locationMode:'demo', accuracy:0, gpsAccuracy:null, mapWatchId:null, indoorAnchor:null, steps:0, lastStepAt:0, sensorOn:false, indoorPanelOpen:false, calibrating:false, followUser:true, indoorSuggested:false,
-    currentPlace:'', calibrationBuildingId:'building1', calibrationFloor:1, calibrationRoomIndex:0, handoffArmed:false, outdoorPromptCooldown:0, rawHeading:null, headingOffset:0, headingAbsolute:false, routeBearing:null, stepLength:0.64, pickingIndoorPosition:false, positionSource:'manual', indoorPosition:null,
+    currentPlace:'', calibrationBuildingId:'building1', calibrationFloor:1, calibrationRoomIndex:0, handoffArmed:false, outdoorPromptCooldown:0, rawHeading:null, headingOffset:0, headingAbsolute:false, routeBearing:null, stepLength:0.64, pickingIndoorPosition:false, positionSource:'manual', indoorPosition:null, exitId:'auto',
     map:{ scale:.58, cx:0, cy:0 },
     route:null, navigating:false, traveled:0, timer:null, watchId:null, arrived:false, indoorGuide:null,
     favorites:new Set(stored('neu_web_favorites') || ['library','canteen','building1']),
@@ -125,7 +125,7 @@
   function renderRoomDestination() {
     const isBuilding = state.destinationId === 'building1';
     $('roomDestination').hidden = !isBuilding;
-    if (!isBuilding) { state.indoorDestination = null; return; }
+    if (!isBuilding) { state.indoorDestination = null; renderExitChoice(); return; }
     const building = INDOOR_BUILDINGS[0];
     state.roomDestFloor = building.floors.includes(state.roomDestFloor) ? state.roomDestFloor : 1;
     $('roomDestFloors').innerHTML = building.floors.map(floor => `<button class="room-dest-floor ${floor === state.roomDestFloor ? 'active' : ''}" data-room-floor="${floor}">${floor}F</button>`).join('');
@@ -141,6 +141,7 @@
       short:`${room.code}${room.type}`, subtitle:`一号楼 ${state.roomDestFloor}F`,
       ...point
     };
+    renderExitChoice();
   }
   function refreshPill() {
     const indoor = state.locationMode === 'indoor';
@@ -271,6 +272,7 @@
     const dest = activeDestination() || { name:'地图选点', short:'目的地' };
     $('nextDestination').textContent = `目的地：${dest.short}`;
     $('externalNav').hidden = !!state.indoorDestination;
+    renderExitChoice();
   }
   function nearestIndoorStair(room, floor) {
     const key = floor === 2 ? 'floor2' : 'floor1';
@@ -374,6 +376,76 @@
       { x:start.point.x, y:start.point.y }, ...indoorNodePoints(floor, nodes), { x:exit.x, y:exit.y }
     ]);
   }
+  function indoorExitById(id) {
+    return INDOOR_EXITS.find(exit => exit.id === id) || null;
+  }
+  function indoorExitCampusPoint(exit) {
+    const base = locById('building1');
+    if (!base || !exit) return base ? { lat:base.lat, lng:base.lng } : null;
+    return {
+      lat: base.lat + (50 - exit.y) * 0.0000045,
+      lng: base.lng + (exit.x - 50) * 0.0000060
+    };
+  }
+  function indoorRouteToExit(floor, room, exit) {
+    if (!exit) return null;
+    if (exit.type === 'door') {
+      const door = INDOOR_DOORS.find(item => item.id === exit.doorId);
+      if (!door) return null;
+      if (floor === 2) {
+        const nearest = nearestIndoorStair(room, 2);
+        if (!nearest) return null;
+        const toStair = indoorRoomToStairRoute(2, room, nearest.stair);
+        const toDoor = indoorStairToDoorRoute(1, nearest.stair, door);
+        return toStair && toDoor ? [...toStair, ...toDoor.slice(1)] : null;
+      }
+      return indoorRoomToDoorRoute(floor, room, door);
+    }
+    const stair = INDOOR_STAIRS.find(item => item.id === exit.stairId);
+    if (!stair) return null;
+    return indoorRoomToStairRoute(floor, room, stair);
+  }
+  function resolveIndoorExit(floor, room) {
+    if (state.exitId !== 'auto') {
+      const selected = indoorExitById(state.exitId);
+      if (selected) return selected;
+    }
+    const destination = activeDestination();
+    const eligible = INDOOR_EXITS.filter(exit => exit.autoEligible);
+    let best = null;
+    for (const exit of eligible) {
+      const route = indoorRouteToExit(floor, room, exit);
+      if (!route) continue;
+      const indoorDistance = estimateRouteMeters(route);
+      const campusPoint = indoorExitCampusPoint(exit);
+      let outdoorDistance = 0;
+      if (!state.indoorDestination && destination && campusPoint) {
+        try { outdoorDistance = NavEngine.plan(campusPoint, destination, state.mode).distance || 0; } catch (error) { outdoorDistance = 0; }
+      }
+      const score = indoorDistance + outdoorDistance + (exit.penalty || 0);
+      if (!best || score < best.score) best = { exit, score };
+    }
+    return best ? best.exit : INDOOR_EXITS[0];
+  }
+  function renderExitChoice() {
+    const wrap = $('exitChoice');
+    if (!wrap) return;
+    const room = currentCalibrationRooms()[state.calibrationRoomIndex] || currentCalibrationRooms()[0];
+    const show = state.locationMode === 'indoor' && !state.indoorDestination && !!room;
+    wrap.hidden = !show;
+    if (!show) return;
+    const select = $('exitSelect');
+    const known = INDOOR_EXITS.some(exit => exit.id === state.exitId);
+    if (!known && state.exitId !== 'auto') state.exitId = 'auto';
+    select.innerHTML = '<option value="auto">自动选择最佳出口（推荐）</option>' + INDOOR_EXITS.map(exit =>
+      `<option value="${exit.id}">${exit.name} · ${exit.accessType === 'stair' ? '楼梯出口' : '普通出口'}${exit.confirmed ? '' : '（现场可用时）'}</option>`
+    ).join('');
+    select.value = state.exitId;
+    const selected = resolveIndoorExit(state.calibrationFloor || 1, room);
+    $('exitChoiceNote').textContent = state.exitId === 'auto'
+      ? `算法预计：${selected ? selected.name : 'A105旁东南普通出口'}。同时比较普通出口、楼梯出口和室外路线。`
+       : `已手动选择：${selected ? selected.name : 'A105旁东南普通出口'}。`;
+  }
   function corridorRoute(a, b, floor) {
     const graphRoute = indoorRoomRoute(floor, a, b);
     if (graphRoute) return graphRoute;
@@ -418,23 +490,41 @@
       return { mode:'indoor', floor, room, destination, stair, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → ${destination.floor}F ${destination.roomCode}` };
     }
 
-    const door = INDOOR_DOORS[0];
+    const selectedExit = resolveIndoorExit(floor, room);
+    const exitCampusPoint = indoorExitCampusPoint(selectedExit);
+    if (selectedExit.type === 'stair') {
+      const stair = INDOOR_STAIRS.find(item => item.id === selectedExit.stairId) || nearestIndoorStair(room, floor).stair;
+      const stairPoint = stair[`floor${floor}`];
+      const exitPoint = stair.floor1;
+      if (floor === 2) {
+        const corridorY = stairPoint.y < 15 ? 10 : stairPoint.y > 70 ? 88 : stairPoint.y < 45 ? 22 : 38;
+        const toStair = indoorRoomToStairRoute(2, room, stair) || dedupePercent([{ x:room.x, y:room.y }, { x:room.x, y:corridorY }, { x:stairPoint.x, y:corridorY }, { x:stairPoint.x, y:stairPoint.y }]);
+        stageList.push({ floor:2, type:'stairs', route:toStair, distance:estimateRouteMeters(toStair), icon:'↱', title:`沿2F走廊前往${stair.name}`, detail:`从${room.code}教室出发，沿走廊前往${stair.name}，然后下到1F出口`, nextLabel:'我已到楼梯，下一层' });
+      } else {
+        const toExit = indoorRoomToStairRoute(1, room, stair) || dedupePercent([{ x:room.x, y:room.y }, { x:stair.floor1.x, y:stair.floor1.y }]);
+        stageList.push({ floor:1, type:'door', route:toExit, distance:estimateRouteMeters(toExit), icon:'↱', title:`沿1F走廊前往${selectedExit.name}`, detail:`从${room.code}教室沿一层走廊前往${selectedExit.name}`, nextLabel:`我已到${selectedExit.name}`, exit:selectedExit });
+      }
+      stageList.push({ floor:1, type:'outside', route:[exitPoint, exitPoint], distance:0, icon:'终', title:`到达${selectedExit.name}`, detail:'看到出口后直接出去，并确认已到室外', nextLabel:'已到门外', exit:selectedExit });
+      return { mode:'outdoor', exit:selectedExit, exitCampusPoint, stair, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:floor === 2 ? `2F ${room.code} → ${stair.name} → 室外` : `1F ${room.code} → ${selectedExit.name} → 室外` };
+    }
+
+    const door = INDOOR_DOORS.find(item => item.id === selectedExit.doorId) || INDOOR_DOORS[0];
     const nearest = nearestIndoorStair(room, floor);
     const stair = nearest.stair;
     const stairPoint = nearest.point;
     if (floor === 2) {
       const corridorY = stairPoint.y < 15 ? 10 : stairPoint.y > 70 ? 88 : stairPoint.y < 45 ? 22 : 38;
       const toStair = indoorRoomToStairRoute(2, room, stair) || dedupePercent([{ x:room.x, y:room.y }, { x:room.x, y:corridorY }, { x:stairPoint.x, y:corridorY }, { x:stairPoint.x, y:stairPoint.y }]);
-      stageList.push({ floor:2, type:'stairs', route:toStair, distance:Math.max(18, Math.round(Math.hypot(room.x - stairPoint.x, room.y - stairPoint.y) * 1.45)), icon:'↱', title:`沿2F走廊前往${stair.name}`, detail:`从${room.code}教室出发，沿走廊前往${stair.name}，然后下到1F`, nextLabel:'我已到楼梯，下一层' });
+      stageList.push({ floor:2, type:'stairs', route:toStair, distance:estimateRouteMeters(toStair), icon:'↱', title:`沿2F走廊前往${stair.name}`, detail:`从${room.code}教室出发，沿走廊前往${stair.name}，然后下到1F`, nextLabel:'我已到楼梯，下一层' });
     }
     const floor1Start = floor === 2 ? stair.floor1 : room;
     const toDoor = (floor === 2
       ? indoorStairToDoorRoute(1, stair, door)
       : indoorRoomToDoorRoute(1, room, door))
       || dedupePercent([{ x:floor1Start.x, y:floor1Start.y }, { x:floor1Start.x, y:88 }, { x:door.x, y:88 }, { x:door.x, y:door.y }]);
-    stageList.push({ floor:1, type:'door', route:toDoor, distance:estimateRouteMeters(toDoor), icon:'↱', title:'沿1F走廊前往A105旁东南出口门', detail:`从${floor === 2 ? stair.name : room.code + '教室'}沿一层走廊前往A105教室右侧的东南出口门；其他楼梯出口不参与室内外切换`, nextLabel:'我已到东南出口门', door });
-    stageList.push({ floor:1, type:'outside', route:[door, door], distance:0, icon:'终', title:`到达${door.name}`, detail:'红色圈出的出口门就在前方，看到门后直接出去，再确认已到室外', nextLabel:'已到门外', door });
-    return { mode:'outdoor', floor, room, stair, door, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:floor === 2 ? `2F ${room.code} → 楼梯 → 1F A105旁东南出口门 → 室外` : `1F ${room.code} → 1F A105旁东南出口门 → 室外` };
+    stageList.push({ floor:1, type:'door', route:toDoor, distance:estimateRouteMeters(toDoor), icon:'↱', title:`沿1F走廊前往${selectedExit.name}`, detail:`从${floor === 2 ? stair.name : room.code + '教室'}沿一层走廊前往${selectedExit.name}`, nextLabel:`我已到${selectedExit.name}`, exit:selectedExit, door });
+    stageList.push({ floor:1, type:'outside', route:[door, door], distance:0, icon:'终', title:`到达${door.name}`, detail:'出口就在前方，看到出口后直接出去，再确认已到室外', nextLabel:'已到门外', exit:selectedExit, door });
+    return { mode:'outdoor', exit:selectedExit, exitCampusPoint, stair, door, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:floor === 2 ? `2F ${room.code} → 楼梯 → ${selectedExit.name} → 室外` : `1F ${room.code} → ${selectedExit.name} → 室外` };
   }
   function pointAlongPercentRoute(points, ratio) {
     if (!points.length) return { x:0, y:0 };
@@ -736,9 +826,12 @@
       $('nextDistance').textContent = distanceText;
       $('followMode').textContent = positionSourceLabel(state.positionSource);
       $('outdoorSwitch').hidden = guide.mode !== 'outdoor';
-      const atA105Exit = guide.mode === 'outdoor' && stage.type === 'outside';
-      $('confirmOutdoorInline').disabled = guide.mode === 'outdoor' && !atA105Exit;
-      $('confirmOutdoorInline').textContent = atA105Exit ? '已从 A105 旁出口离开' : '到达 A105 旁出口后确认';
+      const atSelectedExit = guide.mode === 'outdoor' && stage.type === 'outside';
+      const exitName = guide.exit ? guide.exit.name : '所选出口';
+      $('confirmOutdoorInline').disabled = guide.mode === 'outdoor' && !atSelectedExit;
+      $('confirmOutdoorInline').textContent = atSelectedExit ? '已到室外' : `到达${exitName}后确认`;
+      $('outdoorSwitchQuestion').textContent = `是否已从${exitName}到室外？`;
+      $('outdoorSwitchHint').textContent = '确认后切换到百度地图继续室外导航';
       $('indoorStepIcon').textContent = stage.icon;
       $('indoorStepTitle').textContent = stage.title;
       $('indoorStepDetail').textContent = stage.detail;
@@ -889,9 +982,10 @@
     const guide = state.indoorGuide;
     const exitReached = !guide || guide.mode !== 'outdoor' || guide.stages[guide.stageIndex].type === 'outside';
     if (!exitReached) {
-      showToast('请先到达 A105 旁东南出口门，再切换到室外');
+      showToast(`请先到达${guide && guide.exit ? guide.exit.name : '所选出口'}，再切换到室外`);
       return;
     }
+    if (guide && guide.exitCampusPoint) state.current = guide.exitCampusPoint;
     $('outdoorConfirm').hidden = true;
     $('indoorNavCard').hidden = true;
     $('indoorNextStep').hidden = true;
@@ -1560,13 +1654,18 @@
     state.roomDestFloor = state.calibrationFloor || 1;
     state.roomDestIndex = 0;
     renderRoomDestination();
+    renderExitChoice();
     planRoute(); fitRoute();
   });
   $('roomDestFloors').addEventListener('click', e => {
     const button = e.target.closest('[data-room-floor]'); if (!button) return;
     state.roomDestFloor = Number(button.dataset.roomFloor);
     state.roomDestIndex = 0;
-    renderRoomDestination(); planRoute(); fitRoute();
+    renderRoomDestination(); renderExitChoice(); planRoute(); fitRoute();
+  });
+  $('exitSelect').addEventListener('change', e => {
+    state.exitId = e.target.value;
+    renderExitChoice();
   });
   $('roomDestinationSelect').addEventListener('change', e => {
     state.roomDestIndex = Number(e.target.value);
@@ -1575,7 +1674,7 @@
   document.querySelectorAll('.mode-tab').forEach(btn => btn.addEventListener('click', () => {
     state.mode = btn.dataset.mode;
     document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b === btn));
-    planRoute(); fitRoute();
+    planRoute(); fitRoute(); renderExitChoice();
   }));
   $('centerDestination').addEventListener('click', () => showToast('请直接点击地图上的地点标记'));
   $('toggleSteps').addEventListener('click', () => { state.showSteps = !state.showSteps; renderRouteUI(); });
@@ -1696,7 +1795,7 @@
     state.map.cx = center.x; state.map.cy = center.y;
     renderCategories();
     $('destinationSelect').innerHTML = LOCATIONS.map(loc => `<option value="${loc.id}" ${loc.id === state.destinationId ? 'selected' : ''}>${loc.name}</option>`).join('');
-    refreshPill(); renderNearby(); setTab('map'); renderMap();
+    refreshPill(); renderNearby(); renderExitChoice(); setTab('map'); renderMap();
     setTimeout(renderMap, 120);
     const tick = () => { const d = new Date(); $('clock').textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
     tick(); setInterval(tick, 30000);
