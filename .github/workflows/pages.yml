@@ -21,6 +21,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Generate versioned mobile QR
+        run: |
+          SHORT_SHA="${GITHUB_SHA::8}"
+          TEST_URL="https://lyx493.github.io/neu-campus-navigation/?debug=1&v=${SHORT_SHA}"
+          sudo apt-get update
+          sudo apt-get install -y qrencode
+          mkdir -p web-app/assets/qr
+          qrencode -s 12 -m 4 -o "web-app/assets/qr/${SHORT_SHA}.png" "$TEST_URL"
+          cp "web-app/assets/qr/${SHORT_SHA}.png" web-app/assets/mobile-test-qr.png
+          printf '{"build":"%s","testUrl":"%s","qr":"./assets/qr/%s.png"}\n' "$SHORT_SHA" "$TEST_URL" "$SHORT_SHA" > web-app/build-info.json
+          sed -i -E "s/v=20261021-[0-9]+/v=${SHORT_SHA}/g" web-app/index.html
+          sed -i -E "s/v=20261021-[0-9]+/v=${SHORT_SHA}/g" web-app/mobile-test.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
