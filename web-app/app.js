@@ -11,7 +11,7 @@
     tab:'map', category:'all', selectedId:null, detailId:null, mode:'walk', destinationId:'library', indoorDestination:null, roomDestFloor:1, roomDestIndex:0,
     current:{ lat:CAMPUS.demoStart.lat, lng:CAMPUS.demoStart.lng }, demo:true, heading:null,
     locationMode:'demo', accuracy:0, gpsAccuracy:null, mapWatchId:null, indoorAnchor:null, steps:0, lastStepAt:0, sensorOn:false, indoorPanelOpen:false, calibrating:false, followUser:true, indoorSuggested:false,
-    currentPlace:'', calibrationBuildingId:'building1', calibrationFloor:1, calibrationRoomIndex:0, handoffArmed:false, outdoorPromptCooldown:0, rawHeading:null, headingOffset:0, headingAbsolute:false, routeBearing:null, stepLength:0.64, pickingIndoorPosition:false, positionSource:'manual', indoorPosition:null, exitId:'auto',
+    currentPlace:'', calibrationBuildingId:'building1', calibrationFloor:1, calibrationRoomIndex:0, handoffArmed:false, outdoorPromptCooldown:0, rawHeading:null, headingOffset:0, headingAbsolute:false, routeBearing:null, stepLength:0.64, pickingIndoorPosition:false, positionSource:'manual', indoorPosition:null, exitId:'auto', sensorTracking:false, lastHeadingWarning:0,
     map:{ scale:.58, cx:0, cy:0 },
     route:null, navigating:false, traveled:0, timer:null, watchId:null, arrived:false, indoorGuide:null,
     favorites:new Set(stored('neu_web_favorites') || ['library','canteen','building1']),
@@ -19,10 +19,10 @@
     routes:Number(stored('neu_web_routes')) || 12, showSteps:false
   };
   const diag = { errors:[], motionEvents:0, orientationEvents:0, dragEvents:0, lastGpsAt:0, lastExternalAt:0, lastAccuracy:null, timer:null };
-  const POSITION_SOURCE_LABELS = { manual:'人工校准', uwb:'UWB 实时定位', ble:'蓝牙信标定位', wifi:'Wi-Fi 指纹定位', external:'外部实时定位' };
+  const POSITION_SOURCE_LABELS = { manual:'人工校准', sensor:'传感器路线估算', uwb:'UWB 实时定位', ble:'蓝牙信标定位', wifi:'Wi-Fi 指纹定位', external:'外部实时定位' };
   function normalizePositionSource(source) { return String(source || 'external').toLowerCase(); }
   function positionSourceLabel(source) { const key = normalizePositionSource(source); return POSITION_SOURCE_LABELS[key] || String(source || '外部实时定位'); }
-  function isExternalPositionSource(source) { return normalizePositionSource(source) !== 'manual'; }
+  function isExternalPositionSource(source) { return ['uwb','ble','wifi','external'].includes(normalizePositionSource(source)); }
   window.addEventListener('error', event => diag.errors.push(event.message || 'script error'));
   window.addEventListener('unhandledrejection', event => diag.errors.push(String(event.reason || 'promise rejection')));
 
@@ -166,6 +166,7 @@
     if (badge) {
       badge.textContent = position && position.accuracy ? `${label} · ±${Math.round(position.accuracy)}米` : label;
       badge.classList.toggle('live', isExternalPositionSource(source));
+      badge.classList.toggle('estimated', normalizePositionSource(source) === 'sensor');
       badge.title = age != null ? `${age} 秒前更新` : '通过平面图人工校准';
     }
     if (fixLabel) fixLabel.textContent = `位置来源：${label}`;
@@ -179,10 +180,10 @@
     $('indoorStatusDot').classList.toggle('ready', state.locationMode === 'indoor' || state.locationMode === 'gps');
     const placePrefix = state.currentPlace ? `当前位置：${state.currentPlace}。` : '';
     $('indoorNote').textContent = state.locationMode === 'indoor'
-      ? `${placePrefix}${isExternalPositionSource(state.positionSource) ? '当前位置来自外部硬件实时坐标。' : '当前位置来自你对平面图的明确校准。'}浏览器不会自动推算或移动你的位置。`
+      ? `${placePrefix}${state.positionSource === 'sensor' ? '当前位置由手机方向和步数沿规划路线实时估算，可能出现漂移；请用“修正位置”或外部定位重新校准。' : isExternalPositionSource(state.positionSource) ? '当前位置来自外部硬件实时坐标。' : '当前位置来自你对平面图的明确校准。'}`
       : state.gpsAccuracy && state.gpsAccuracy > 25
         ? '当前 GPS 精度较弱，建议点击“校准位置”标注所在点，再开启室内辅助。'
-        : '室内位置只由外部定位或人工校准决定；指南针和步数不会改变你的位置。';
+        : '室内位置来自外部定位或人工校准；开始导航后会使用手机方向和步数估算前进。';
     updatePositionSourceUI();
   }
   function renderNearby() {
@@ -651,12 +652,62 @@
     const stage = guide.stages[guide.stageIndex];
     const walked = Math.max(0, guide.manualOffset || 0);
     if (autoAdvance && stage.distance > 0 && walked >= stage.distance && guide.stageIndex < guide.stages.length - 1) {
-      guide.stageIndex += 1;
-      guide.startSteps = state.steps;
-      updateIndoorNavMap(true);
-    } else {
-      updateIndoorNavMap(false);
+      if (stage.type === 'stairs') {
+        guide.manualOffset = stage.distance;
+        updateIndoorNavMap(false);
+        return;
+      }
+      advanceIndoorGuide();
+      return;
     }
+    updateIndoorNavMap(false);
+  }
+  function advanceIndoorByStep() {
+    const guide = state.indoorGuide;
+    if (!guide || !state.navigating || !state.sensorTracking || isExternalPositionSource(state.positionSource)) return;
+    if (state.rawHeading != null && state.routeBearing != null) {
+      const diff = normalizeDiff(state.heading - state.routeBearing);
+      if (Math.abs(diff) > 70) {
+        if (Date.now() - state.lastHeadingWarning > 2500) {
+          state.lastHeadingWarning = Date.now();
+          showToast(diff > 0 ? '方向偏离，请向左调整后再前进' : '方向偏离，请向右调整后再前进');
+        }
+        return;
+      }
+    }
+    let remaining = state.stepLength || .64;
+    let guard = 0;
+    while (remaining > .01 && state.indoorGuide && guard++ < 6) {
+      const activeGuide = state.indoorGuide;
+      const stage = activeGuide.stages[activeGuide.stageIndex];
+      if (!stage) break;
+      const left = stage.distance - Math.max(0, activeGuide.manualOffset || 0);
+      if (left <= .01) {
+        if (stage.type === 'stairs') break;
+        updateIndoorGuideProgress(true);
+        continue;
+      }
+      const advance = Math.min(remaining, left);
+      activeGuide.manualOffset = Math.max(0, activeGuide.manualOffset || 0) + advance;
+      remaining -= advance;
+      if (activeGuide.manualOffset >= stage.distance - .01) {
+        if (stage.type === 'stairs') break;
+        updateIndoorGuideProgress(true);
+      } else {
+        break;
+      }
+    }
+    if (!state.indoorGuide) return;
+    const activeGuide = state.indoorGuide;
+    const stage = activeGuide.stages[activeGuide.stageIndex];
+    const ratio = stage.distance > 0 ? Math.min(1, (activeGuide.manualOffset || 0) / stage.distance) : 1;
+    const point = pointAlongPercentRoute(stage.route, ratio);
+    state.positionSource = 'sensor';
+    state.accuracy = 4;
+    state.indoorPosition = { floor:stage.floor, x:point.x, y:point.y, accuracy:4, source:'sensor', updatedAt:Date.now() };
+    updatePositionSourceUI();
+    updateIndoorNavMap(false);
+    updateNavUI();
   }
   function advanceIndoorGuide() {
     const guide = state.indoorGuide;
@@ -1147,6 +1198,7 @@
         state.lastStepAt = now;
         state.steps += 1;
         renderIndoorUI();
+        advanceIndoorByStep();
       }
     });
   }
@@ -1241,6 +1293,7 @@
     const permissions = await requestSensorPermission();
     const denied = permissions.some(result => result === 'denied');
     state.sensorOn = !denied;
+    state.sensorTracking = !denied;
     state.locationMode = 'indoor';
     state.demo = false;
     state.accuracy = 4;
@@ -1248,7 +1301,7 @@
     state.steps = 0;
     bindSensors();
     refreshPill(); renderIndoorUI(); renderMap();
-    showToast(denied ? '方向权限未开启，可继续人工校准位置' : '指南针已开启，位置仍以人工/外部定位为准');
+    showToast(denied ? '传感器权限未开启，可继续人工校准位置' : '传感器已开启，导航时会沿路线估算实时位置');
   }
   function getCalibrationBuilding() {
     return INDOOR_BUILDINGS[0];
@@ -1404,11 +1457,18 @@
       showToast('实时定位中断，请检查 GPS 或位置权限');
     }, { enableHighAccuracy:true, maximumAge:1000, timeout:12000 });
   }
-  function startNavigation() {
+  async function startNavigation() {
     if (state.demo) {
       showToast('请先校准室内位置或开启实时定位');
       openIndoorTab();
       return;
+    }
+    if (state.locationMode === 'indoor' && state.positionSource === 'manual' && !state.sensorOn) {
+      const permissions = await requestSensorPermission();
+      const denied = permissions.some(result => result === 'denied');
+      state.sensorOn = !denied;
+      state.sensorTracking = !denied;
+      if (!denied) bindSensors();
     }
     if (!state.route) planRoute();
     state.navigating = true;
@@ -1810,6 +1870,15 @@
     connect: connectExternalPositioning,
     disconnect: disconnectExternalPositioning,
     getState: () => state.indoorPosition ? { ...state.indoorPosition } : null,
+    simulateStep: (distance) => {
+      if (!state.navigating || !state.indoorGuide || isExternalPositionSource(state.positionSource)) return false;
+      const previous = state.stepLength;
+      state.sensorTracking = true;
+      if (Number.isFinite(distance) && distance > 0) state.stepLength = distance;
+      advanceIndoorByStep();
+      state.stepLength = previous;
+      return state.indoorPosition ? { ...state.indoorPosition } : false;
+    },
     getNavigationState: () => ({
       mode:state.locationMode,
       source:state.positionSource,

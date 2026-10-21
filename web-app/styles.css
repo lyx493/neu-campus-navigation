@@ -542,3 +542,5 @@ body.fullscreen .phone-shell { width: min(430px,100vw); height: 100vh; border: 0
 .exit-choice-head small { color:#7990aa; font-size:7px; }
 #exitSelect { width:100%; height:32px; padding:0 8px; border:1px solid #d5e3f3; border-radius:8px; background:#fff; color:#28415e; font-size:9px; font-weight:650; }
 .exit-choice-note { display:block; margin-top:5px; color:#687d96; font-size:7px; line-height:1.45; }
+
+.position-source-badge.estimated { background:#e8f2ff; color:#2967b3; }
