@@ -1,0 +1,219 @@
+{
+  "type": "neu-indoor-walk-path",
+  "version": 2,
+  "name": "一号楼 A201 到 B227",
+  "recordedAt": "2026-10-21T13:12:50.822Z",
+  "durationMs": 153537,
+  "sensor": {
+    "steps": 128,
+    "lastHeading": 121.1
+  },
+  "sequence": [
+    {
+      "sequence": 1,
+      "floor": 2,
+      "x": 54.03,
+      "y": 85.05,
+      "timestamp": 1792588375473,
+      "elapsedMs": 4651,
+      "heading": 227.8,
+      "steps": 1,
+      "label": "节点1"
+    },
+    {
+      "sequence": 2,
+      "floor": 2,
+      "x": 47.74,
+      "y": 79.4,
+      "timestamp": 1792588391280,
+      "elapsedMs": 20458,
+      "heading": 225.9,
+      "steps": 12,
+      "label": "节点2"
+    },
+    {
+      "sequence": 3,
+      "floor": 2,
+      "x": 69.99,
+      "y": 73.63,
+      "timestamp": 1792588430448,
+      "elapsedMs": 59626,
+      "heading": 192.6,
+      "steps": 64,
+      "label": "节点3"
+    },
+    {
+      "sequence": 4,
+      "floor": 2,
+      "x": 81.64,
+      "y": 70.37,
+      "timestamp": 1792588431368,
+      "elapsedMs": 60546,
+      "heading": 191.9,
+      "steps": 65,
+      "label": "节点4"
+    },
+    {
+      "sequence": 5,
+      "floor": 2,
+      "x": 80.94,
+      "y": 54.86,
+      "timestamp": 1792588437094,
+      "elapsedMs": 66272,
+      "heading": 220.7,
+      "steps": 69,
+      "label": "节点5"
+    },
+    {
+      "sequence": 6,
+      "floor": 2,
+      "x": 80.47,
+      "y": 41.26,
+      "timestamp": 1792588443299,
+      "elapsedMs": 72477,
+      "heading": 189.8,
+      "steps": 71,
+      "label": "节点6"
+    },
+    {
+      "sequence": 7,
+      "floor": 2,
+      "x": 82.8,
+      "y": 28.75,
+      "timestamp": 1792588498298,
+      "elapsedMs": 127476,
+      "heading": 181.2,
+      "steps": 123,
+      "label": "节点7"
+    },
+    {
+      "sequence": 8,
+      "floor": 2,
+      "x": 80.94,
+      "y": 17.87,
+      "timestamp": 1792588505239,
+      "elapsedMs": 134417,
+      "heading": 155.2,
+      "steps": 123,
+      "label": "节点8"
+    },
+    {
+      "sequence": 9,
+      "floor": 2,
+      "x": 73.72,
+      "y": 13.79,
+      "timestamp": 1792588515075,
+      "elapsedMs": 144253,
+      "heading": 134.2,
+      "steps": 127,
+      "label": "节点9"
+    }
+  ],
+  "paths": [
+    {
+      "buildingId": "building1",
+      "floor": 2,
+      "points": [
+        {
+          "sequence": 1,
+          "floor": 2,
+          "x": 54.03,
+          "y": 85.05,
+          "timestamp": 1792588375473,
+          "elapsedMs": 4651,
+          "heading": 227.8,
+          "steps": 1,
+          "label": "节点1"
+        },
+        {
+          "sequence": 2,
+          "floor": 2,
+          "x": 47.74,
+          "y": 79.4,
+          "timestamp": 1792588391280,
+          "elapsedMs": 20458,
+          "heading": 225.9,
+          "steps": 12,
+          "label": "节点2"
+        },
+        {
+          "sequence": 3,
+          "floor": 2,
+          "x": 69.99,
+          "y": 73.63,
+          "timestamp": 1792588430448,
+          "elapsedMs": 59626,
+          "heading": 192.6,
+          "steps": 64,
+          "label": "节点3"
+        },
+        {
+          "sequence": 4,
+          "floor": 2,
+          "x": 81.64,
+          "y": 70.37,
+          "timestamp": 1792588431368,
+          "elapsedMs": 60546,
+          "heading": 191.9,
+          "steps": 65,
+          "label": "节点4"
+        },
+        {
+          "sequence": 5,
+          "floor": 2,
+          "x": 80.94,
+          "y": 54.86,
+          "timestamp": 1792588437094,
+          "elapsedMs": 66272,
+          "heading": 220.7,
+          "steps": 69,
+          "label": "节点5"
+        },
+        {
+          "sequence": 6,
+          "floor": 2,
+          "x": 80.47,
+          "y": 41.26,
+          "timestamp": 1792588443299,
+          "elapsedMs": 72477,
+          "heading": 189.8,
+          "steps": 71,
+          "label": "节点6"
+        },
+        {
+          "sequence": 7,
+          "floor": 2,
+          "x": 82.8,
+          "y": 28.75,
+          "timestamp": 1792588498298,
+          "elapsedMs": 127476,
+          "heading": 181.2,
+          "steps": 123,
+          "label": "节点7"
+        },
+        {
+          "sequence": 8,
+          "floor": 2,
+          "x": 80.94,
+          "y": 17.87,
+          "timestamp": 1792588505239,
+          "elapsedMs": 134417,
+          "heading": 155.2,
+          "steps": 123,
+          "label": "节点8"
+        },
+        {
+          "sequence": 9,
+          "floor": 2,
+          "x": 73.72,
+          "y": 13.79,
+          "timestamp": 1792588515075,
+          "elapsedMs": 144253,
+          "heading": 134.2,
+          "steps": 127,
+          "label": "节点9"
+        }
+      ]
+    }
+  ]
+}
