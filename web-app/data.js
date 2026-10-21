@@ -89,15 +89,15 @@ const INDOOR_BUILDINGS = [
         { code:'B213', type:'教室', x:9.0, y:22.3 },
         { code:'B215', type:'教室', x:8.4, y:10.2 },
         { code:'B216', type:'教室', x:56.9, y:22.3 },
-        { code:'B217', type:'教室', x:45.5, y:7.8 },
-        { code:'B219', type:'教室', x:53.5, y:7.8 },
-        { code:'B221', type:'教室', x:60.2, y:7.8 },
-        { code:'B223', type:'教室', x:66.9, y:7.8 },
-        { code:'B225', type:'教室', x:74.9, y:7.8 },
-        { code:'B227', type:'教室', x:83.6, y:7.8 },
-        { code:'B229', type:'教室', x:90.3, y:7.8 },
-        { code:'B231', type:'教室', x:96.0, y:7.8 },
-        { code:'B233', type:'教室', x:98.0, y:11.0 }
+        { code:'B217', type:'教室', x:41.5, y:7.8 },
+        { code:'B219', type:'教室', x:47.5, y:7.8 },
+        { code:'B221', type:'教室', x:53.0, y:7.8 },
+        { code:'B223', type:'教室', x:59.0, y:7.8 },
+        { code:'B225', type:'教室', x:65.0, y:7.8 },
+        { code:'B227', type:'教室', x:71.0, y:7.8 },
+        { code:'B229', type:'教室', x:77.0, y:7.8 },
+        { code:'B231', type:'教室', x:83.0, y:7.8 },
+        { code:'B233', type:'教室', x:89.5, y:9.0 }
       ]
     }
   }
@@ -114,6 +114,61 @@ const INDOOR_STAIRS = [
 
 
 
+
+
+
+// Navigation graph derived from the user's marked 2F walking route.
+// Room centers are connected to their real door, then to corridor nodes only.
+const INDOOR_ROUTE_GRAPHS = {
+  2: {
+    nodes: {
+      W0:{x:14.5,y:91.4}, W1:{x:14.5,y:79.7}, W2:{x:14.5,y:67.6},
+      W3:{x:14.5,y:56.2}, W4:{x:14.5,y:45.3}, W5:{x:14.5,y:32.8},
+      W6:{x:14.5,y:22.5}, W7:{x:14.5,y:13.5},
+      S0:{x:14.5,y:68.5}, S1:{x:30,y:68.5}, S2:{x:41,y:68.5},
+      S3:{x:48.2,y:68.5}, S4:{x:52.3,y:68.5}, S5:{x:60.2,y:68.5},
+      S6:{x:70,y:68.5}, S7:{x:76.9,y:68.5}, S8:{x:80.5,y:68.5},
+      T0:{x:14.5,y:22.5}, T1:{x:30,y:22.5}, T2:{x:45.5,y:22.5},
+      T3:{x:56.9,y:22.5}, T4:{x:68,y:22.5}, T5:{x:76.5,y:22.5},
+      U0:{x:14.5,y:13.5}, U1:{x:22,y:13.5}, U2:{x:35,y:13.5},
+      U3:{x:41.5,y:13.5}, U4:{x:47.5,y:13.5}, U5:{x:53,y:13.5},
+      U6:{x:59,y:13.5}, U7:{x:65,y:13.5}, U8:{x:71,y:13.5},
+      U9:{x:77,y:13.5}, U10:{x:83,y:13.5}, U11:{x:89.5,y:13.5}, U12:{x:98,y:13.5},
+      E0:{x:76.5,y:22.5}, E1:{x:76.5,y:31}, E2:{x:80.5,y:38},
+      E3:{x:80.5,y:45.3}, E4:{x:80.5,y:55}, E5:{x:80.5,y:64.8}, E6:{x:80.5,y:68.5},
+      ST_S:{x:62,y:78}, ST_E:{x:78,y:37}, ST_W:{x:20,y:24},
+      ST_NW:{x:18,y:7}, ST_NE:{x:90,y:20}
+    },
+    edges: [
+      ['W0','W1'],['W1','W2'],['W2','W3'],['W3','W4'],['W4','W5'],['W5','W6'],['W6','W7'],
+      ['S0','W2'],['S0','S1'],['S1','S2'],['S2','S3'],['S3','S4'],['S4','S5'],['S5','S6'],['S6','S7'],['S7','S8'],
+      ['T0','W6'],['T0','T1'],['T1','T2'],['T2','T3'],['T3','T4'],['T4','T5'],['T5','E0'],
+      ['U0','W7'],['U0','U1'],['U1','U2'],['U2','U3'],['U3','U4'],['U4','U5'],['U5','U6'],['U6','U7'],['U7','U8'],['U8','U9'],['U9','U10'],['U10','U11'],['U11','U12'],
+      ['E0','U9'],['E0','E1'],['E1','E2'],['E2','E3'],['E3','E4'],['E4','E5'],['E5','E6'],['E6','S8'],
+      ['S5','ST_S'],['E2','ST_E'],['W6','ST_W'],['W7','ST_NW'],['U11','ST_NE']
+    ],
+    roomDoors: {
+      A201:{x:52.3,y:77.5,corridor:'S4'}, A202:{x:48.2,y:70.5,corridor:'S3'},
+      A203:{x:76.9,y:77.5,corridor:'S7'}, A204:{x:60.2,y:70.5,corridor:'S5'},
+      A205:{x:84.0,y:64.8,corridor:'E5'}, A207:{x:84.0,y:45.3,corridor:'E3'},
+      B201:{x:14.5,y:91.4,corridor:'W0'}, B203:{x:14.5,y:79.7,corridor:'W1'},
+      B205:{x:14.5,y:67.6,corridor:'W2'}, B206:{x:19.0,y:45.3,corridor:'W4'},
+      B207:{x:14.5,y:56.2,corridor:'W3'}, B209:{x:14.5,y:45.3,corridor:'W4'},
+      B211:{x:14.5,y:32.8,corridor:'W5'}, B212:{x:45.5,y:22.3,corridor:'T2'},
+      B213:{x:14.5,y:22.3,corridor:'W6'}, B215:{x:14.5,y:13.5,corridor:'U0'},
+      B216:{x:56.9,y:22.3,corridor:'T3'}, B217:{x:41.5,y:12.8,corridor:'U3'},
+      B219:{x:47.5,y:12.8,corridor:'U4'}, B221:{x:53.0,y:12.8,corridor:'U5'},
+      B223:{x:59.0,y:12.8,corridor:'U6'}, B225:{x:65.0,y:12.8,corridor:'U7'},
+      B227:{x:71.0,y:12.8,corridor:'U8'}, B229:{x:77.0,y:12.8,corridor:'U9'},
+      B231:{x:83.0,y:12.8,corridor:'U10'}, B233:{x:89.5,y:12.8,corridor:'U11'}
+    },
+    stairs: {
+      south:{entry:'ST_S',point:{x:62,y:92}}, east:{entry:'ST_E',point:{x:76,y:37}},
+      west:{entry:'ST_W',point:{x:19,y:22}}, northwest:{entry:'ST_NW',point:{x:17,y:7}},
+      northeast:{entry:'ST_NE',point:{x:90,y:20}}
+    }
+  }
+};
 
 const INDOOR_DOORS = [
   {

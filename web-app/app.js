@@ -282,7 +282,78 @@
   function dedupePercent(points) {
     return points.filter((p, i) => i === 0 || Math.hypot(p.x - points[i-1].x, p.y - points[i-1].y) > .5);
   }
-  function corridorRoute(a, b) {
+  function shortestIndoorNodePath(floor, startId, endId) {
+    const graph = INDOOR_ROUTE_GRAPHS[floor];
+    if (!graph || !graph.nodes[startId] || !graph.nodes[endId]) return null;
+    const adjacency = {};
+    graph.edges.forEach(([a,b]) => {
+      (adjacency[a] ||= []).push(b);
+      (adjacency[b] ||= []).push(a);
+    });
+    const distance = {}, previous = {}, unvisited = new Set(Object.keys(graph.nodes));
+    Object.keys(graph.nodes).forEach(id => { distance[id] = Infinity; });
+    distance[startId] = 0;
+    while (unvisited.size) {
+      let current = null, best = Infinity;
+      for (const id of unvisited) if (distance[id] < best) { current = id; best = distance[id]; }
+      if (!current || current === endId) break;
+      unvisited.delete(current);
+      for (const next of adjacency[current] || []) {
+        if (!unvisited.has(next)) continue;
+        const a = graph.nodes[current], b = graph.nodes[next];
+        const candidate = distance[current] + Math.hypot(a.x-b.x, a.y-b.y);
+        if (candidate < distance[next]) { distance[next] = candidate; previous[next] = current; }
+      }
+    }
+    if (!Number.isFinite(distance[endId])) return null;
+    const path = [endId];
+    while (path[0] !== startId) path.unshift(previous[path[0]]);
+    return path;
+  }
+  function indoorNodePoints(floor, ids) {
+    const graph = INDOOR_ROUTE_GRAPHS[floor];
+    return (ids || []).map(id => ({ x:graph.nodes[id].x, y:graph.nodes[id].y }));
+  }
+  function indoorRoomRoute(floor, a, b) {
+    const graph = INDOOR_ROUTE_GRAPHS[floor];
+    const start = graph && graph.roomDoors[a && a.code];
+    const end = graph && graph.roomDoors[b && b.code];
+    if (!start || !end) return null;
+    const nodes = shortestIndoorNodePath(floor, start.corridor, end.corridor);
+    if (!nodes) return null;
+    return dedupePercent([
+      { x:a.x, y:a.y }, { x:start.x, y:start.y },
+      ...indoorNodePoints(floor, nodes),
+      { x:end.x, y:end.y }, { x:b.x, y:b.y }
+    ]);
+  }
+  function indoorRoomToStairRoute(floor, room, stair) {
+    const graph = INDOOR_ROUTE_GRAPHS[floor];
+    const start = graph && graph.roomDoors[room && room.code];
+    const entry = graph && graph.stairs[stair && stair.id];
+    if (!start || !entry) return null;
+    const nodes = shortestIndoorNodePath(floor, start.corridor, entry.entry);
+    if (!nodes) return null;
+    return dedupePercent([
+      { x:room.x, y:room.y }, { x:start.x, y:start.y },
+      ...indoorNodePoints(floor, nodes), { x:entry.point.x, y:entry.point.y }
+    ]);
+  }
+  function indoorStairToRoomRoute(floor, stair, room) {
+    const graph = INDOOR_ROUTE_GRAPHS[floor];
+    const start = graph && graph.stairs[stair && stair.id];
+    const end = graph && graph.roomDoors[room && room.code];
+    if (!start || !end) return null;
+    const nodes = shortestIndoorNodePath(floor, start.entry, end.corridor);
+    if (!nodes) return null;
+    return dedupePercent([
+      { x:start.point.x, y:start.point.y }, ...indoorNodePoints(floor, nodes),
+      { x:end.x, y:end.y }, { x:room.x, y:room.y }
+    ]);
+  }
+  function corridorRoute(a, b, floor) {
+    const graphRoute = indoorRoomRoute(floor, a, b);
+    if (graphRoute) return graphRoute;
     let corridorY = 38;
     if (a.y < 45 && b.y < 45) corridorY = 22;
     else if (a.y > 60 && b.y > 60) corridorY = 88;
@@ -304,7 +375,7 @@
     if (state.indoorDestination && destination.buildingId === 'building1') {
       const destRoom = building.roomsByFloor[destination.floor][destination.roomIndex];
       if (destination.floor === floor) {
-        const route = corridorRoute(room, destRoom);
+        const route = corridorRoute(room, destRoom, floor);
         stageList.push({ floor, type:'room', route, distance:estimateRouteMeters(route), icon:'↱', title:`前往${destination.floor}F ${destination.roomCode}${destination.roomType}`, detail:`从${room.code}教室出发，沿${floor}F走廊前往${destination.roomCode}${destination.roomType}`, nextLabel:'我已到达目的地' });
         stageList.push({ floor, type:'arrive', route:[destRoom, destRoom], distance:0, icon:'终', title:`到达${destination.roomCode}${destination.roomType}`, detail:`目的地${destination.roomCode}${destination.roomType}就在附近`, nextLabel:'已到达' });
         return { mode:'indoor', floor, room, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → ${destination.floor}F ${destination.roomCode}` };
@@ -314,11 +385,11 @@
       const stair = nearest.stair;
       const stairPoint = nearest.point;
       const corridorY = stairPoint.y < 15 ? 10 : stairPoint.y > 70 ? 88 : stairPoint.y < 45 ? 22 : 38;
-      const toStair = dedupePercent([{ x:room.x, y:room.y }, { x:room.x, y:corridorY }, { x:stairPoint.x, y:corridorY }, { x:stairPoint.x, y:stairPoint.y }]);
+      const toStair = indoorRoomToStairRoute(floor, room, stair) || dedupePercent([{ x:room.x, y:room.y }, { x:room.x, y:corridorY }, { x:stairPoint.x, y:corridorY }, { x:stairPoint.x, y:stairPoint.y }]);
       const directionText = destination.floor < floor ? '下' : '上';
       stageList.push({ floor, type:'stairs', route:toStair, distance:estimateRouteMeters(toStair), icon:'↱', title:`沿${floor}F走廊前往${stair.name}`, detail:`从${room.code}教室出发，前往${stair.name}，然后${directionText}到${destination.floor}F`, nextLabel:`我已到楼梯，${directionText}到${destination.floor}F` });
       const destStair = stair[`floor${destination.floor}`];
-      const toDest = corridorRoute(destStair, destRoom);
+      const toDest = indoorStairToRoomRoute(destination.floor, stair, destRoom) || corridorRoute(destStair, destRoom, destination.floor);
       stageList.push({ floor:destination.floor, type:'room', route:toDest, distance:estimateRouteMeters(toDest), icon:'↱', title:`前往${destination.floor}F ${destination.roomCode}${destination.roomType}`, detail:`从${stair.name}沿${destination.floor}F走廊前往${destination.roomCode}${destination.roomType}`, nextLabel:'我已到达目的地' });
       stageList.push({ floor:destination.floor, type:'arrive', route:[destRoom, destRoom], distance:0, icon:'终', title:`到达${destination.roomCode}${destination.roomType}`, detail:'已到达室内目的地', nextLabel:'已到达' });
       return { mode:'indoor', floor, room, destination, stair, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → ${destination.floor}F ${destination.roomCode}` };
@@ -330,7 +401,7 @@
     const stairPoint = nearest.point;
     if (floor === 2) {
       const corridorY = stairPoint.y < 15 ? 10 : stairPoint.y > 70 ? 88 : stairPoint.y < 45 ? 22 : 38;
-      const toStair = dedupePercent([{ x:room.x, y:room.y }, { x:room.x, y:corridorY }, { x:stairPoint.x, y:corridorY }, { x:stairPoint.x, y:stairPoint.y }]);
+      const toStair = indoorRoomToStairRoute(2, room, stair) || dedupePercent([{ x:room.x, y:room.y }, { x:room.x, y:corridorY }, { x:stairPoint.x, y:corridorY }, { x:stairPoint.x, y:stairPoint.y }]);
       stageList.push({ floor:2, type:'stairs', route:toStair, distance:Math.max(18, Math.round(Math.hypot(room.x - stairPoint.x, room.y - stairPoint.y) * 1.45)), icon:'↱', title:`沿2F走廊前往${stair.name}`, detail:`从${room.code}教室出发，沿走廊前往${stair.name}，然后下到1F`, nextLabel:'我已到楼梯，下一层' });
     }
     const floor1Start = floor === 2 ? stair.floor1 : room;
