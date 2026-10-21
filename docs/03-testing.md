@@ -9,6 +9,8 @@
 
 ## 手机测试
 
+固定入口：`https://lyx493.github.io/neu-campus-navigation/?debug=1`
+
 1. 使用固定 HTTPS 地址（GitHub Pages 或学校服务器）
 2. 允许位置、方向与运动传感器权限
 3. 点击底部“室内”
