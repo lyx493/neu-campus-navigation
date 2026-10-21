@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>手机测试入口 · 东大浑南校园导航</title>
   <style>
-    *{box-sizing:border-box} body{margin:0;min-height:100vh;padding:42px 24px;font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;color:#17263c;background:radial-gradient(circle at 15% 15%,rgba(68,125,255,.22),transparent 28%),linear-gradient(145deg,#071326,#112746 58%,#08172c);display:flex;align-items:center;justify-content:center}.card{width:min(900px,100%);padding:38px;border-radius:30px;background:#f7f9fd;box-shadow:0 35px 90px rgba(0,0,0,.35);display:grid;grid-template-columns:330px 1fr;gap:38px;align-items:center}.qr-wrap{text-align:center}.qr{width:100%;max-width:300px;display:block;margin:auto;border-radius:18px;background:#fff;box-shadow:0 14px 38px rgba(31,60,103,.16)}.qr-wrap p{margin:16px 0 0;color:#7b899c;font-size:12px}.eyebrow{margin:0 0 12px;color:#1e66e8;font-size:11px;font-weight:800;letter-spacing:2.5px}.content h1{margin:0;font-size:36px;line-height:1.15;letter-spacing:-2px}.content h1 span{color:#1e66e8}.lead{margin:16px 0 22px;color:#6f7e92;font-size:14px;line-height:1.8}.url{padding:12px 14px;border-radius:12px;background:#eaf1ff;color:#1d5fd6;font-size:11px;word-break:break-all;text-decoration:none;display:block;font-family:Consolas,monospace}.steps{margin:22px 0 0;padding:0;list-style:none;counter-reset:step}.steps li{counter-increment:step;position:relative;padding:0 0 14px 38px;color:#52647b;font-size:13px;line-height:1.55}.steps li:before{content:counter(step);position:absolute;left:0;top:-2px;width:25px;height:25px;border-radius:9px;background:#1e66e8;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}.warn{margin-top:16px;padding:12px 14px;border-radius:12px;background:#fff8e9;color:#7d602c;font-size:11px;line-height:1.65}.actions{display:flex;gap:10px;margin-top:20px}.actions a{height:42px;padding:0 17px;border-radius:12px;display:flex;align-items:center;text-decoration:none;font-size:12px;font-weight:700}.primary{background:#1e66e8;color:#fff}.secondary{background:#eaf0f8;color:#4c617a}@media(max-width:720px){body{padding:16px}.card{grid-template-columns:1fr;padding:24px;gap:24px}.content h1{font-size:30px}.qr{max-width:260px}}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;padding:42px 24px;font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;color:#17263c;background:radial-gradient(circle at 15% 15%,rgba(68,125,255,.22),transparent 28%),linear-gradient(145deg,#071326,#112746 58%,#08172c);display:flex;align-items:center;justify-content:center}.card{width:min(900px,100%);padding:38px;border-radius:30px;background:#f7f9fd;box-shadow:0 35px 90px rgba(0,0,0,.35);display:grid;grid-template-columns:330px 1fr;gap:38px;align-items:center}.qr-wrap{text-align:center}.qr{width:100%;max-width:300px;display:block;margin:auto;border-radius:18px;background:#fff;box-shadow:0 14px 38px rgba(31,60,103,.16)}.qr-wrap p{margin:16px 0 0;color:#7b899c;font-size:12px}.build-badge{display:inline-flex;margin-top:10px;padding:5px 9px;border-radius:999px;background:#e8f0ff;color:#1d5fd6;font-size:10px;font-weight:700}.eyebrow{margin:0 0 12px;color:#1e66e8;font-size:11px;font-weight:800;letter-spacing:2.5px}.content h1{margin:0;font-size:36px;line-height:1.15;letter-spacing:-2px}.content h1 span{color:#1e66e8}.lead{margin:16px 0 22px;color:#6f7e92;font-size:14px;line-height:1.8}.url{padding:12px 14px;border-radius:12px;background:#eaf1ff;color:#1d5fd6;font-size:11px;word-break:break-all;text-decoration:none;display:block;font-family:Consolas,monospace}.steps{margin:22px 0 0;padding:0;list-style:none;counter-reset:step}.steps li{counter-increment:step;position:relative;padding:0 0 14px 38px;color:#52647b;font-size:13px;line-height:1.55}.steps li:before{content:counter(step);position:absolute;left:0;top:-2px;width:25px;height:25px;border-radius:9px;background:#1e66e8;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}.warn{margin-top:16px;padding:12px 14px;border-radius:12px;background:#fff8e9;color:#7d602c;font-size:11px;line-height:1.65}.actions{display:flex;gap:10px;margin-top:20px}.actions a{height:42px;padding:0 17px;border-radius:12px;display:flex;align-items:center;text-decoration:none;font-size:12px;font-weight:700}.primary{background:#1e66e8;color:#fff}.secondary{background:#eaf0f8;color:#4c617a}@media(max-width:720px){body{padding:16px}.card{grid-template-columns:1fr;padding:24px;gap:24px}.content h1{font-size:30px}.qr{max-width:260px}}
   </style>
 </head>
 <body>
@@ -13,22 +13,44 @@
     <div class="qr-wrap">
       <img class="qr" src="./assets/mobile-test-qr.png" alt="手机测试二维码">
       <p>使用手机相机扫码</p>
+      <span class="build-badge" id="buildBadge">正在读取最新版本…</span>
     </div>
     <section class="content">
       <p class="eyebrow">MOBILE TEST · HTTPS</p>
       <h1>手机扫码测试<br><span>室内导航与标准化地图</span></h1>
-      <p class="lead">该地址为固定 GitHub Pages HTTPS 入口，手机可直接调用定位、方向和运动传感器。</p>
-      <a class="url" href="https://lyx493.github.io/neu-campus-navigation/?debug=1&v=20261021-1" target="_blank" rel="noopener">https://lyx493.github.io/neu-campus-navigation/?debug=1&v=20261021-1</a>
+      <p class="lead">每次部署都会生成本次版本专属二维码，手机扫码后进入最新测试版本。</p>
+      <a class="url" href="https://lyx493.github.io/neu-campus-navigation/?debug=1&v=20261021-8" target="_blank" rel="noopener">https://lyx493.github.io/neu-campus-navigation/?debug=1&v=20261021-8</a>
       <ol class="steps">
         <li>扫码打开页面，先允许位置、方向和运动传感器权限。</li>
         <li>点击底部“室内”→“校准位置”，选择一号楼 1F 或 2F。之后在“导航→目的地→一号楼”展开室内子地点，选择具体教室。导航中可用“修正位置”在平面图上点选实际位置，或前后微调 2 米。</li>
         <li>在标准化平面图上点击教室，例如 A101、B215，然后确认位置。</li>
-        <li>点击“开启指南针”，导航会显示标准化楼层图、蓝色路线、当前位置和指南针。可按当前路线方向校准指南针，底部面板可下拉收起。</li>
+        <li>点击“开启指南针”并允许运动传感器。导航开始后，手机方向和步数会沿规划走廊实时推进当前位置；可通过“修正位置”重新校准。</li>
         <li>从“我的 → 手机诊断”打开诊断面板，复制或截图诊断信息。</li>
       </ol>
-      <div class="warn">这是固定 GitHub Pages 测试入口。室内位置只来自人工校准或外部 UWB / 蓝牙 / Wi-Fi 坐标，步数和指南针不会自动移动位置。</div>
-      <div class="actions"><a class="primary" href="https://lyx493.github.io/neu-campus-navigation/?debug=1&v=20261021-1" target="_blank">打开手机诊断入口</a><a class="secondary" href="./">返回导航</a></div>
+      <div class="warn">室内实时位置由手机方向和步数沿走廊估算，并可由人工校准、二维码节点或外部 UWB / 蓝牙 / Wi-Fi 坐标纠正。传感器估算会漂移，定位来源会明确标注。</div>
+      <div class="actions"><a class="primary" href="https://lyx493.github.io/neu-campus-navigation/?debug=1&v=20261021-8" target="_blank">打开手机诊断入口</a><a class="secondary" href="./">返回导航</a></div>
     </section>
   </main>
+
+<script>
+(async () => {
+  const fallbackBuild = '20261021-8';
+  let info = null;
+  try {
+    const response = await fetch('./build-info.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (response.ok) info = await response.json();
+  } catch (error) {}
+  const build = info && info.build ? info.build : fallbackBuild;
+  const testUrl = info && info.testUrl ? info.testUrl : 'https://lyx493.github.io/neu-campus-navigation/?debug=1&v=' + build;
+  document.querySelectorAll('a.url, a.primary').forEach(link => {
+    link.href = testUrl;
+    if (link.classList.contains('url')) link.textContent = testUrl;
+  });
+  const qr = document.querySelector('.qr');
+  qr.src = info && info.qr ? info.qr : './assets/mobile-test-qr.png?v=' + build;
+  document.getElementById('buildBadge').textContent = '当前测试版本：' + build;
+})();
+</script>
+
 </body>
 </html>
