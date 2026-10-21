@@ -4,6 +4,10 @@
 
 这是当前稳定快照，重点是修正“定位自己乱走”和“人工校准不生效”的问题。请拉取 GitHub 最新 `main` 或下载 v0.2.0 压缩包。
 
+固定手机测试入口：
+
+`https://lyx493.github.io/neu-campus-navigation/`
+
 ## 本轮必须重点测试
 
 1. UWB/BLE/Wi-Fi 外部坐标是否原样显示在 1F/2F 平面图。
@@ -22,7 +26,7 @@
 - 用户人工校准
 - 外部 UWB / 蓝牙信标 / Wi-Fi 指纹坐标
 
-外部定位接入方式见 `docs/06-接口接入建议.md`。
+外部定位接入方式见 `docs/06-positioning-api.md`。
 
 ## 反馈模板
 
@@ -32,6 +36,6 @@
 
 - 网页：`web-app/`
 - 小程序：`wechat-mini-program/`
-- 已知问题：`docs/04-已知问题.md`
-- 测试说明：`docs/03-测试说明.md`
-- 定位接口：`docs/06-接口接入建议.md`
+- 已知问题：`docs/04-known-issues.md`
+- 测试说明：`docs/03-testing.md`
+- 定位接口：`docs/06-positioning-api.md`
