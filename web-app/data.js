@@ -225,11 +225,11 @@ const INDOOR_ROUTE_GRAPHS = {
 const INDOOR_DOORS = [
   {
     id: 'door_a105_east',
-    name: '一号楼1F东南出口门',
-    shortName: '东南出口门',
+    name: '一号楼1F A105旁东南出口门',
+    shortName: 'A105旁出口门',
     x: 91,
     y: 88,
-    note: 'A105教室右侧、图中红色圈出的出口门',
+    note: '用户确认的唯一室内外切换出口：A105教室右侧红色圈出的门；其他楼梯下方出口不参与导航',
     confirmed: true
   }
 ];
