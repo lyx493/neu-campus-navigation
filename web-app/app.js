@@ -736,6 +736,9 @@
       $('nextDistance').textContent = distanceText;
       $('followMode').textContent = positionSourceLabel(state.positionSource);
       $('outdoorSwitch').hidden = guide.mode !== 'outdoor';
+      const atA105Exit = guide.mode === 'outdoor' && stage.type === 'outside';
+      $('confirmOutdoorInline').disabled = guide.mode === 'outdoor' && !atA105Exit;
+      $('confirmOutdoorInline').textContent = atA105Exit ? '已从 A105 旁出口离开' : '到达 A105 旁出口后确认';
       $('indoorStepIcon').textContent = stage.icon;
       $('indoorStepTitle').textContent = stage.title;
       $('indoorStepDetail').textContent = stage.detail;
@@ -883,6 +886,12 @@
     showToast('继续室内导航');
   }
   function confirmOutdoorHandoff() {
+    const guide = state.indoorGuide;
+    const exitReached = !guide || guide.mode !== 'outdoor' || guide.stages[guide.stageIndex].type === 'outside';
+    if (!exitReached) {
+      showToast('请先到达 A105 旁东南出口门，再切换到室外');
+      return;
+    }
     $('outdoorConfirm').hidden = true;
     $('indoorNavCard').hidden = true;
     $('indoorNextStep').hidden = true;
