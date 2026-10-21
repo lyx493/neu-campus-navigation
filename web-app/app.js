@@ -1819,6 +1819,7 @@
   document.querySelectorAll('.profile-menu button').forEach(btn => btn.addEventListener('click', () => {
     if (btn.dataset.debug) openDebugPanel(); else showToast(btn.dataset.tip);
   }));
+  $('pathRecorder').addEventListener('click', () => window.open('./path-recorder.html?from=app','_blank','noopener'));
   $('fullscreenToggle').addEventListener('click', () => { document.body.classList.toggle('fullscreen'); $('fullscreenToggle').textContent = document.body.classList.contains('fullscreen') ? '退出全屏' : '全屏预览'; setTimeout(renderMap, 60); });
   window.addEventListener('resize', () => { renderMap(); syncIndoorNavLayout(); });
 

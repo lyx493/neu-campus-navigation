@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>实走路径采集 · 东大浑南校园导航</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;background:#08172c;color:#17263c}
+    header{position:sticky;top:0;z-index:20;padding:14px 16px;background:rgba(7,19,38,.96);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    header h1{margin:0;font-size:20px}header p{margin:5px 0 0;color:#9eb4d3;font-size:12px}
+    main{max-width:1180px;margin:0 auto;padding:14px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px}
+    .card{background:#fff;border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,.22);overflow:hidden}
+    .controls{padding:16px;display:flex;flex-direction:column;gap:10px;align-self:start;position:sticky;top:82px}
+    .controls label{font-size:11px;color:#6f8096;font-weight:700}
+    input[type=text]{width:100%;height:38px;border:1px solid #d8e2ef;border-radius:10px;padding:0 11px;color:#223852;background:#f8fbff}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row.three{grid-template-columns:1fr 1fr 1fr}
+    button{min-height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:750;font-size:11px;cursor:pointer;background:#edf3fa;color:#3d5876}
+    button.primary{background:#1e66e8;color:#fff}button.danger{background:#fff0ee;color:#bd4439}button:disabled{opacity:.45;cursor:not-allowed}
+    .status{padding:10px 11px;border-radius:11px;background:#f2f7ff;color:#41617f;font-size:11px;line-height:1.6}.status b{color:#1e66e8}
+    .hint{padding:9px 10px;border-radius:10px;background:#fff7e7;color:#806028;font-size:10px;line-height:1.55}
+    .map-card{min-width:0}.map-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #edf1f6}
+    .map-head b{font-size:15px}.map-head small{display:block;margin-top:3px;color:#8492a5;font-size:10px}
+    .floor-tabs{display:flex;gap:6px}.floor-tabs button{min-height:34px;width:48px}.floor-tabs button.active{background:#1e66e8;color:#fff}
+    .zoom-row{display:flex;align-items:center;gap:9px;padding:9px 16px;background:#f8fbff;font-size:10px;color:#657a94}.zoom-row input{flex:1}
+    .plan-stage{overflow:auto;max-height:72vh;background:#f1eadb;-webkit-overflow-scrolling:touch}.plan-wrap{position:relative;width:100%;min-width:100%;transition:width .15s ease}
+    .plan-wrap img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}.route-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+    .route-line{fill:none;stroke:#1e66e8;stroke-width:1.2;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 2px rgba(0,0,0,.2))}
+    .point-dot{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;display:grid;place-items:center;background:#1e66e8;color:#fff;border:2px solid #fff;font-size:9px;font-weight:900;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
+    .point-dot.first{background:#18a873}.point-dot.last{background:#e38723}
+    .points-card{margin-top:14px}.points-head{padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #edf1f6}.points-head b{font-size:14px}.points-head small{color:#8492a5;font-size:10px}
+    .point-list{max-height:330px;overflow:auto;padding:8px}.point-row{display:grid;grid-template-columns:34px 50px minmax(0,1fr) 126px;gap:8px;align-items:center;padding:8px;border-radius:10px}.point-row:nth-child(odd){background:#f7faff}
+    .point-row i{width:25px;height:25px;border-radius:8px;display:grid;place-items:center;background:#e7efff;color:#1e66e8;font-style:normal;font-weight:900;font-size:10px}.point-row small{color:#7e8da1;font-size:9px}.point-row input{height:31px;font-size:10px}.point-row button{height:30px;min-height:30px;font-size:9px}
+    .empty{padding:26px;text-align:center;color:#94a0b0;font-size:11px}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);padding:10px 15px;border-radius:11px;background:#142942;color:#fff;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
+    @media(max-width:800px){main{grid-template-columns:1fr;padding:10px}.controls{position:static}.plan-stage{max-height:65vh}.point-row{grid-template-columns:32px 44px minmax(0,1fr) 112px}.map-head{align-items:flex-start}.map-head small{line-height:1.4}}
+  </style>
+</head>
+<body>
+<header><h1>实走路径采集</h1><p>沿真实路线行走，在平面图上依次点出门口、转弯、楼梯和出口。记录可导出成 JSON 交给开发人员。</p></header>
+<main>
+  <section class="card controls">
+    <label for="recordName">路线名称</label>
+    <input id="recordName" type="text" value="一号楼 A201 到 B227">
+    <label>所在楼层</label>
+    <div class="floor-tabs"><button data-floor="1">1F</button><button data-floor="2" class="active">2F</button></div>
+    <div class="row"><button id="startRecord" class="primary">开始实走采集</button><button id="stopRecord">结束采集</button></div>
+    <button id="sensorButton">开启方向和步数记录</button>
+    <div class="status" id="status">尚未开始。点击“开始实走采集”，然后沿实际路线行走，并在图上点击当前位置。</div>
+    <div class="hint">采集精度来自你点击的真实位置；方向、步数和时间只作为辅助数据。建议在教室门、每个转弯、楼梯口和出口处各记录一个节点。</div>
+    <div class="row three"><button id="undoPoint">撤销上一点</button><button id="clearPoints" class="danger">清空</button><button id="copyJson">复制JSON</button></div>
+    <button id="exportJson" class="primary">导出路径 JSON</button>
+  </section>
+  <div>
+    <section class="card map-card">
+      <div class="map-head"><div><b id="mapTitle">一号楼 · 2F</b><small>点击平面图添加一个实走节点</small></div><div class="floor-tabs"><button data-map-floor="1">1F</button><button data-map-floor="2" class="active">2F</button></div></div>
+      <div class="zoom-row"><span>缩放</span><input id="zoomRange" type="range" min="100" max="240" value="100"><b id="zoomText">100%</b></div>
+      <div class="plan-stage" id="planStage"><div class="plan-wrap" id="planWrap"><img id="planImage" src="./assets/indoor/building1-2f.jpg" alt="一号楼平面图"><svg id="routeSvg" class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none"></svg><div id="pointsLayer"></div></div></div>
+    </section>
+    <section class="card points-card"><div class="points-head"><b>已记录节点</b><small id="pointCount">0 个节点</small></div><div class="point-list" id="pointList"><div class="empty">还没有节点</div></div></section>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+  const planImages={1:'./assets/indoor/building1-1f.jpg',2:'./assets/indoor/building1-2f.jpg'};
+  const state={floor:2,recording:false,points:[],startedAt:0,heading:null,steps:0,lastStepAt:0,sensorOn:false};
+  const $=id=>document.getElementById(id);
+  const planWrap=$('planWrap'),planImage=$('planImage'),routeSvg=$('routeSvg'),pointsLayer=$('pointsLayer'),pointList=$('pointList');
+  function toast(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),1800)}
+  function normalize(deg){while(deg<0)deg+=360;while(deg>=360)deg-=360;return deg}
+  function setFloor(floor){state.floor=floor;planImage.src=planImages[floor];document.querySelectorAll('[data-floor],[data-map-floor]').forEach(b=>b.classList.toggle('active',Number(b.dataset.floor||b.dataset.mapFloor)===floor));$('mapTitle').textContent='一号楼 · '+floor+'F';render()}
+  async function requestSensors(){
+    const tasks=[];
+    if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function')tasks.push(DeviceMotionEvent.requestPermission());
+    if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function')tasks.push(DeviceOrientationEvent.requestPermission());
+    try{const results=await Promise.all(tasks);state.sensorOn=!results.some(v=>v==='denied');}catch(e){state.sensorOn=false}
+    $('sensorButton').textContent=state.sensorOn?'方向和步数记录已开启':'方向和步数记录未开启';updateStatus();toast(state.sensorOn?'传感器记录已开启':'未获得传感器权限，仍可记录位置节点');
+  }
+  function updateStatus(){
+    const sec=state.recording?Math.floor((Date.now()-state.startedAt)/1000):0;
+    $('status').innerHTML='<b>'+(state.recording?'正在采集':'未在采集')+'</b><br>节点：'+state.points.length+' · 用时：'+sec+'秒<br>方向：'+(state.heading==null?'--':Math.round(state.heading)+'°')+' · 步数：'+state.steps+'<br>楼层：'+state.floor+'F';
+    $('startRecord').disabled=state.recording;$('stopRecord').disabled=!state.recording;
+  }
+  function addPoint(event){
+    if(!state.recording){toast('请先点击“开始实走采集”');return}
+    const rect=planWrap.getBoundingClientRect();const x=(event.clientX-rect.left)/rect.width*100;const y=(event.clientY-rect.top)/rect.height*100;
+    if(x<0||x>100||y<0||y>100)return;
+    state.points.push({floor:state.floor,x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),timestamp:Date.now(),elapsedMs:Date.now()-state.startedAt,heading:state.heading==null?null:Number(state.heading.toFixed(1)),steps:state.steps,label:state.floor+'F节点'+(state.points.filter(p=>p.floor===state.floor).length+1)});
+    saveDraft();render();toast('已记录 '+state.floor+'F 节点');
+  }
+  function render(){
+    const current=state.points.filter(p=>p.floor===state.floor);
+    routeSvg.innerHTML='';
+    if(current.length>1){const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.setAttribute('points',current.map(p=>p.x+','+p.y).join(' '));line.setAttribute('class','route-line');routeSvg.appendChild(line)}
+    pointsLayer.innerHTML=current.map((p,i)=>'<div class="point-dot '+(i===0?'first':i===current.length-1?'last':'')+'" style="left:'+p.x+'%;top:'+p.y+'%">'+(i+1)+'</div>').join('');
+    $('pointCount').textContent=state.points.length+' 个节点';
+    pointList.innerHTML=state.points.length?state.points.map((p,i)=>'<div class="point-row"><i>'+(i+1)+'</i><small>'+p.floor+'F</small><input data-label="'+i+'" value="'+String(p.label||'').replace(/"/g,'&quot;')+'" placeholder="填写门口/转弯说明"><button data-delete="'+i+'">删除</button></div>').join(''):'<div class="empty">还没有节点</div>';
+    updateStatus();
+  }
+  function saveDraft(){try{localStorage.setItem('neu_walk_path_draft',JSON.stringify({name:$('recordName').value,points:state.points,startedAt:state.startedAt}))}catch(e){}}
+  function loadDraft(){try{const d=JSON.parse(localStorage.getItem('neu_walk_path_draft'));if(d&&Array.isArray(d.points)&&d.points.length){state.points=d.points;state.startedAt=d.startedAt||Date.now();$('recordName').value=d.name||$('recordName').value;toast('已恢复上次未导出路径')}}catch(e){}}
+  function exportPayload(){return {type:'neu-indoor-walk-path',version:1,name:$('recordName').value.trim()||'未命名路线',recordedAt:new Date(state.startedAt||Date.now()).toISOString(),durationMs:state.startedAt?Date.now()-state.startedAt:0,sensor:{steps:state.steps,lastHeading:state.heading},paths:[1,2].map(floor=>({buildingId:'building1',floor,points:state.points.filter(p=>p.floor===floor)})).filter(path=>path.points.length)}}
+  $('startRecord').addEventListener('click',async()=>{if(state.points.length&&!confirm('开始新采集会清空当前节点，继续吗？'))return;state.points=[];state.steps=0;state.startedAt=Date.now();state.recording=true;saveDraft();render();await requestSensors()});
+  $('stopRecord').addEventListener('click',()=>{state.recording=false;updateStatus();toast('采集已结束，可导出路径')});
+  $('sensorButton').addEventListener('click',requestSensors);
+  planWrap.addEventListener('click',addPoint);
+  document.querySelectorAll('[data-floor]').forEach(b=>b.addEventListener('click',()=>setFloor(Number(b.dataset.floor))));
+  document.querySelectorAll('[data-map-floor]').forEach(b=>b.addEventListener('click',()=>setFloor(Number(b.dataset.mapFloor))));
+  $('undoPoint').addEventListener('click',()=>{const floorIndex=state.points.map(p=>p.floor).lastIndexOf(state.floor);if(floorIndex>=0){state.points.splice(floorIndex,1);saveDraft();render()}});
+  $('clearPoints').addEventListener('click',()=>{if(confirm('确定清空全部采集节点吗？')){state.points=[];state.startedAt=Date.now();saveDraft();render()}});
+  $('copyJson').addEventListener('click',async()=>{const text=JSON.stringify(exportPayload(),null,2);try{await navigator.clipboard.writeText(text);toast('JSON 已复制')}catch(e){toast('复制失败，请使用导出 JSON')}});
+  $('exportJson').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(exportPayload(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='neu-walk-path-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('路径 JSON 已导出')});
+  pointList.addEventListener('input',e=>{const input=e.target.closest('[data-label]');if(!input)return;const i=Number(input.dataset.label);if(state.points[i]){state.points[i].label=input.value;saveDraft()}});
+  pointList.addEventListener('click',e=>{const b=e.target.closest('[data-delete]');if(!b)return;state.points.splice(Number(b.dataset.delete),1);saveDraft();render()});
+  $('zoomRange').addEventListener('input',e=>{const z=Number(e.target.value);planWrap.style.width=z+'%';$('zoomText').textContent=z+'%'});
+  window.addEventListener('deviceorientationabsolute',e=>{if(typeof e.alpha==='number')state.heading=normalize(360-e.alpha+(screen.orientation?screen.orientation.angle:0));updateStatus()});
+  window.addEventListener('deviceorientation',e=>{if(state.heading==null&&typeof e.alpha==='number')state.heading=normalize(360-e.alpha+(screen.orientation?screen.orientation.angle:0));updateStatus()});
+  window.addEventListener('devicemotion',e=>{const acc=e.accelerationIncludingGravity||e.acceleration;if(!acc)return;const m=Math.sqrt((acc.x||0)**2+(acc.y||0)**2+(acc.z||0)**2);const threshold=e.accelerationIncludingGravity?12:2.2;const now=Date.now();if(m>threshold&&now-state.lastStepAt>330){state.lastStepAt=now;state.steps++;updateStatus()}});
+  loadDraft();setFloor(2);setInterval(updateStatus,1000);
+})();
+</script>
+</body>
+</html>
