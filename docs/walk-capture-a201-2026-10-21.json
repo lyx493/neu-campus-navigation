@@ -1,0 +1,305 @@
+{
+  "type": "neu-indoor-walk-path",
+  "version": 1,
+  "name": "一号楼 A201 到 B227",
+  "recordedAt": "2026-10-21T12:54:18.074Z",
+  "durationMs": 735390,
+  "sensor": {
+    "steps": 524,
+    "lastHeading": 164.89999999999998
+  },
+  "paths": [
+    {
+      "buildingId": "building1",
+      "floor": 1,
+      "points": [
+        {
+          "floor": 1,
+          "x": 47.55,
+          "y": 71.72,
+          "timestamp": 1792587427058,
+          "elapsedMs": 168984,
+          "heading": 301,
+          "steps": 83,
+          "label": "1F节点1"
+        },
+        {
+          "floor": 1,
+          "x": 53.54,
+          "y": 77.97,
+          "timestamp": 1792587437407,
+          "elapsedMs": 179333,
+          "heading": 336.9,
+          "steps": 94,
+          "label": "1F节点2"
+        },
+        {
+          "floor": 1,
+          "x": 61.04,
+          "y": 71.16,
+          "timestamp": 1792587446985,
+          "elapsedMs": 188911,
+          "heading": 246.1,
+          "steps": 108,
+          "label": "1F节点3"
+        },
+        {
+          "floor": 1,
+          "x": 62.47,
+          "y": 79.59,
+          "timestamp": 1792587456527,
+          "elapsedMs": 198453,
+          "heading": 348.6,
+          "steps": 123,
+          "label": "1F节点4"
+        },
+        {
+          "floor": 1,
+          "x": 77.35,
+          "y": 76.51,
+          "timestamp": 1792587467630,
+          "elapsedMs": 209556,
+          "heading": 288.3,
+          "steps": 140,
+          "label": "1F节点5"
+        },
+        {
+          "floor": 1,
+          "x": 85.82,
+          "y": 79.43,
+          "timestamp": 1792587483500,
+          "elapsedMs": 225426,
+          "heading": 331.2,
+          "steps": 166,
+          "label": "1F节点6"
+        },
+        {
+          "floor": 1,
+          "x": 93.9,
+          "y": 86.08,
+          "timestamp": 1792587492672,
+          "elapsedMs": 234598,
+          "heading": 290.5,
+          "steps": 182,
+          "label": "1F节点7"
+        },
+        {
+          "floor": 1,
+          "x": 85.04,
+          "y": 68.73,
+          "timestamp": 1792587529201,
+          "elapsedMs": 271127,
+          "heading": 342.8,
+          "steps": 243,
+          "label": "1F节点8"
+        },
+        {
+          "floor": 1,
+          "x": 82.83,
+          "y": 59.36,
+          "timestamp": 1792587560764,
+          "elapsedMs": 302690,
+          "heading": 277.8,
+          "steps": 264,
+          "label": "1F节点9"
+        },
+        {
+          "floor": 1,
+          "x": 81.13,
+          "y": 53.02,
+          "timestamp": 1792587566097,
+          "elapsedMs": 308023,
+          "heading": 164.9,
+          "steps": 269,
+          "label": "1F节点10"
+        },
+        {
+          "floor": 1,
+          "x": 84.39,
+          "y": 42.79,
+          "timestamp": 1792587577568,
+          "elapsedMs": 319494,
+          "heading": 245.2,
+          "steps": 287,
+          "label": "1F节点11"
+        },
+        {
+          "floor": 1,
+          "x": 78.4,
+          "y": 37.34,
+          "timestamp": 1792587597736,
+          "elapsedMs": 339662,
+          "heading": 115.4,
+          "steps": 302,
+          "label": "1F节点12"
+        },
+        {
+          "floor": 1,
+          "x": 67.98,
+          "y": 38.15,
+          "timestamp": 1792587605716,
+          "elapsedMs": 347642,
+          "heading": 136.9,
+          "steps": 315,
+          "label": "1F节点13"
+        },
+        {
+          "floor": 1,
+          "x": 73.71,
+          "y": 36.36,
+          "timestamp": 1792587628295,
+          "elapsedMs": 370221,
+          "heading": 74.1,
+          "steps": 356,
+          "label": "1F节点14"
+        }
+      ]
+    },
+    {
+      "buildingId": "building1",
+      "floor": 2,
+      "points": [
+        {
+          "floor": 2,
+          "x": 52.44,
+          "y": 83.67,
+          "timestamp": 1792587328968,
+          "elapsedMs": 70894,
+          "heading": 165.4,
+          "steps": 1,
+          "label": "2F节点1"
+        },
+        {
+          "floor": 2,
+          "x": 53.6,
+          "y": 75.14,
+          "timestamp": 1792587367973,
+          "elapsedMs": 109899,
+          "heading": 160.8,
+          "steps": 21,
+          "label": "2F节点2"
+        },
+        {
+          "floor": 2,
+          "x": 48.18,
+          "y": 71.3,
+          "timestamp": 1792587380959,
+          "elapsedMs": 122885,
+          "heading": 169.1,
+          "steps": 31,
+          "label": "2F节点3"
+        },
+        {
+          "floor": 2,
+          "x": 33.86,
+          "y": 70.17,
+          "timestamp": 1792587389070,
+          "elapsedMs": 130996,
+          "heading": 204.4,
+          "steps": 41,
+          "label": "2F节点4"
+        },
+        {
+          "floor": 2,
+          "x": 72.74,
+          "y": 37.58,
+          "timestamp": 1792587646433,
+          "elapsedMs": 388359,
+          "heading": 305.2,
+          "steps": 383,
+          "label": "2F节点5"
+        },
+        {
+          "floor": 2,
+          "x": 85.14,
+          "y": 42.11,
+          "timestamp": 1792587655204,
+          "elapsedMs": 397130,
+          "heading": 12.3,
+          "steps": 394,
+          "label": "2F节点6"
+        },
+        {
+          "floor": 2,
+          "x": 85.01,
+          "y": 52,
+          "timestamp": 1792587666077,
+          "elapsedMs": 408003,
+          "heading": 318.1,
+          "steps": 414,
+          "label": "2F节点7"
+        },
+        {
+          "floor": 2,
+          "x": 86.57,
+          "y": 59.3,
+          "timestamp": 1792587669907,
+          "elapsedMs": 411833,
+          "heading": 16.5,
+          "steps": 420,
+          "label": "2F节点8"
+        },
+        {
+          "floor": 2,
+          "x": 85.79,
+          "y": 68.82,
+          "timestamp": 1792587680468,
+          "elapsedMs": 422394,
+          "heading": 320.3,
+          "steps": 440,
+          "label": "2F节点9"
+        },
+        {
+          "floor": 2,
+          "x": 82.4,
+          "y": 78.32,
+          "timestamp": 1792587688489,
+          "elapsedMs": 430415,
+          "heading": 92.1,
+          "steps": 453,
+          "label": "2F节点10"
+        },
+        {
+          "floor": 2,
+          "x": 73.41,
+          "y": 78.92,
+          "timestamp": 1792587699236,
+          "elapsedMs": 441162,
+          "heading": 44.8,
+          "steps": 473,
+          "label": "2F节点11"
+        },
+        {
+          "floor": 2,
+          "x": 66.13,
+          "y": 68.27,
+          "timestamp": 1792587710227,
+          "elapsedMs": 452153,
+          "heading": 113.7,
+          "steps": 488,
+          "label": "2F节点12"
+        },
+        {
+          "floor": 2,
+          "x": 63.13,
+          "y": 78.92,
+          "timestamp": 1792587718019,
+          "elapsedMs": 459945,
+          "heading": 16.6,
+          "steps": 502,
+          "label": "2F节点13"
+        },
+        {
+          "floor": 2,
+          "x": 57.47,
+          "y": 81.12,
+          "timestamp": 1792587727194,
+          "elapsedMs": 469120,
+          "heading": 45.8,
+          "steps": 517,
+          "label": "2F节点14"
+        }
+      ]
+    }
+  ]
+}
