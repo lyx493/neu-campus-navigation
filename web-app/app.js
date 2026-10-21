@@ -1657,6 +1657,15 @@
     ].join('\n');
   }
   $('closeDebug').addEventListener('click', closeDebugPanel);
+  $('simulateMotion').addEventListener('click', () => {
+    if (!state.navigating || !state.indoorGuide) { showToast('请先开始室内导航'); return; }
+    const previous = state.stepLength;
+    state.sensorTracking = true;
+    state.stepLength = 5;
+    advanceIndoorByStep();
+    state.stepLength = previous;
+    renderDebugPanel();
+  });
   $('closeDebugBottom').addEventListener('click', closeDebugPanel);
   $('debugFab').addEventListener('click', openDebugPanel);
   $('copyDebug').addEventListener('click', async () => {
