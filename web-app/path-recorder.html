@@ -42,6 +42,8 @@
     <input id="recordName" type="text" value="一号楼 A201 到 B227">
     <label>所在楼层</label>
     <div class="floor-tabs"><button data-floor="1">1F</button><button data-floor="2" class="active">2F</button></div>
+    <label for="nodeLabel">当前节点说明</label>
+    <input id="nodeLabel" type="text" placeholder="例如：A201门口、走廊右转、南侧楼梯">
     <div class="row"><button id="startRecord" class="primary">开始实走采集</button><button id="stopRecord">结束采集</button></div>
     <button id="sensorButton">开启方向和步数记录</button>
     <div class="status" id="status">尚未开始。点击“开始实走采集”，然后沿实际路线行走，并在图上点击当前位置。</div>
@@ -84,7 +86,9 @@
     if(!state.recording){toast('请先点击“开始实走采集”');return}
     const rect=planWrap.getBoundingClientRect();const x=(event.clientX-rect.left)/rect.width*100;const y=(event.clientY-rect.top)/rect.height*100;
     if(x<0||x>100||y<0||y>100)return;
-    state.points.push({floor:state.floor,x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),timestamp:Date.now(),elapsedMs:Date.now()-state.startedAt,heading:state.heading==null?null:Number(state.heading.toFixed(1)),steps:state.steps,label:state.floor+'F节点'+(state.points.filter(p=>p.floor===state.floor).length+1)});
+    const nodeLabel=$('nodeLabel').value.trim()||('节点'+(state.points.length+1));
+    state.points.push({sequence:state.points.length+1,floor:state.floor,x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),timestamp:Date.now(),elapsedMs:Date.now()-state.startedAt,heading:state.heading==null?null:Number(state.heading.toFixed(1)),steps:state.steps,label:nodeLabel});
+    $('nodeLabel').value='';
     saveDraft();render();toast('已记录 '+state.floor+'F 节点');
   }
   function render(){
@@ -98,7 +102,7 @@
   }
   function saveDraft(){try{localStorage.setItem('neu_walk_path_draft',JSON.stringify({name:$('recordName').value,points:state.points,startedAt:state.startedAt}))}catch(e){}}
   function loadDraft(){try{const d=JSON.parse(localStorage.getItem('neu_walk_path_draft'));if(d&&Array.isArray(d.points)&&d.points.length){state.points=d.points;state.startedAt=d.startedAt||Date.now();$('recordName').value=d.name||$('recordName').value;toast('已恢复上次未导出路径')}}catch(e){}}
-  function exportPayload(){return {type:'neu-indoor-walk-path',version:1,name:$('recordName').value.trim()||'未命名路线',recordedAt:new Date(state.startedAt||Date.now()).toISOString(),durationMs:state.startedAt?Date.now()-state.startedAt:0,sensor:{steps:state.steps,lastHeading:state.heading},paths:[1,2].map(floor=>({buildingId:'building1',floor,points:state.points.filter(p=>p.floor===floor)})).filter(path=>path.points.length)}}
+  function exportPayload(){const ordered=state.points.slice().sort((a,b)=>a.elapsedMs-b.elapsedMs).map((p,i)=>({...p,sequence:i+1}));return {type:'neu-indoor-walk-path',version:2,name:$('recordName').value.trim()||'未命名路线',recordedAt:new Date(state.startedAt||Date.now()).toISOString(),durationMs:state.startedAt?Date.now()-state.startedAt:0,sensor:{steps:state.steps,lastHeading:state.heading},sequence:ordered,paths:[1,2].map(floor=>({buildingId:'building1',floor,points:ordered.filter(p=>p.floor===floor)})).filter(path=>path.points.length)}}
   $('startRecord').addEventListener('click',async()=>{if(state.points.length&&!confirm('开始新采集会清空当前节点，继续吗？'))return;state.points=[];state.steps=0;state.startedAt=Date.now();state.recording=true;saveDraft();render();await requestSensors()});
   $('stopRecord').addEventListener('click',()=>{state.recording=false;updateStatus();toast('采集已结束，可导出路径')});
   $('sensorButton').addEventListener('click',requestSensors);

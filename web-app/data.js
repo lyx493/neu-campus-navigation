@@ -107,7 +107,7 @@ const INDOOR_BUILDINGS = [
 const INDOOR_STAIRS = [
   { id:'northwest', name:'西北侧楼梯', floor1:{x:17,y:7}, floor2:{x:18,y:5} },
   { id:'west', name:'西侧楼梯', floor1:{x:19,y:22}, floor2:{x:20,y:24} },
-  { id:'east', name:'东侧楼梯', floor1:{x:72,y:38}, floor2:{x:76,y:37} },
+  { id:'east', name:'东侧楼梯', floor1:{x:73.7,y:36.4}, floor2:{x:72.7,y:37.6} },
   { id:'northeast', name:'东北侧楼梯', floor1:{x:85,y:22}, floor2:{x:90,y:20} },
   { id:'south', name:'南侧楼梯', floor1:{x:60,y:92}, floor2:{x:62,y:92} },
   { id:'southwest', name:'西南侧楼梯', floor1:{x:17,y:89}, floor2:{x:17,y:89} }
@@ -123,7 +123,7 @@ const INDOOR_STAIRS = [
 
 
 const INDOOR_EXITS = [
-  { id:'door_a105_east', name:'A105旁东南普通出口', type:'door', accessType:'direct', doorId:'door_a105_east', x:91, y:88, confirmed:true, autoEligible:true, penalty:0 },
+  { id:'door_a105_east', name:'A105旁东南普通出口', type:'door', accessType:'direct', doorId:'door_a105_east', x:93.9, y:86.1, confirmed:true, autoEligible:true, penalty:0 },
   { id:'stair_southwest_exit', name:'B101旁西南楼梯出口', type:'stair', accessType:'stair', stairId:'southwest', x:17, y:89, confirmed:true, autoEligible:true, penalty:12 },
   { id:'stair_south_exit', name:'南侧楼梯出口', type:'stair', accessType:'stair', stairId:'south', x:60, y:92, confirmed:false, autoEligible:false, penalty:25 },
   { id:'stair_east_exit', name:'东侧楼梯出口', type:'stair', accessType:'stair', stairId:'east', x:72, y:38, confirmed:false, autoEligible:false, penalty:25 },
@@ -229,7 +229,7 @@ const INDOOR_ROUTE_GRAPHS = {
       northeast:{entry:'ST_NE',point:{x:90,y:20}}
     },
     exitDoors: {
-      door_a105_east:{x:91,y:88,node:'EX1'}
+      door_a105_east:{x:93.9,y:86.1,node:'EX1'}
     }
   }
 };
@@ -239,8 +239,8 @@ const INDOOR_DOORS = [
     id: 'door_a105_east',
     name: '一号楼1F A105旁东南出口门',
     shortName: 'A105旁出口门',
-    x: 91,
-    y: 88,
+    x: 93.9,
+    y: 86.1,
     note: 'A105教室右侧红色圈出的出口门',
     confirmed: true
   }
