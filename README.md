@@ -46,7 +46,7 @@ window.CampusIndoorPositioning.update({
 });
 ```
 
-完整 JSON、WebSocket 和调试接口见 `docs/06-接口接入建议.md`。
+完整 JSON、WebSocket 和调试接口见 `docs/06-positioning-api.md`。
 
 ## 当前核心限制
 
@@ -63,5 +63,5 @@ window.CampusIndoorPositioning.update({
 - 室内数据：`web-app/data.js`
 - 路网：`web-app/nav-engine.js`
 - 平面图：`web-app/assets/indoor/`
-- 已知问题：`docs/04-已知问题.md`
-- 改进计划：`docs/05-改进计划.md`
+- 已知问题：`docs/04-known-issues.md`
+- 改进计划：`docs/05-roadmap.md`
