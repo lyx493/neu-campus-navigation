@@ -351,6 +351,29 @@
       { x:end.x, y:end.y }, { x:room.x, y:room.y }
     ]);
   }
+  function indoorRoomToDoorRoute(floor, room, door) {
+    const graph = INDOOR_ROUTE_GRAPHS[floor];
+    const start = graph && graph.roomDoors[room && room.code];
+    const exit = graph && graph.exitDoors[door && door.id];
+    if (!start || !exit) return null;
+    const nodes = shortestIndoorNodePath(floor, start.corridor, exit.node);
+    if (!nodes) return null;
+    return dedupePercent([
+      { x:room.x, y:room.y }, { x:start.x, y:start.y },
+      ...indoorNodePoints(floor, nodes), { x:exit.x, y:exit.y }
+    ]);
+  }
+  function indoorStairToDoorRoute(floor, stair, door) {
+    const graph = INDOOR_ROUTE_GRAPHS[floor];
+    const start = graph && graph.stairs[stair && stair.id];
+    const exit = graph && graph.exitDoors[door && door.id];
+    if (!start || !exit) return null;
+    const nodes = shortestIndoorNodePath(floor, start.entry, exit.node);
+    if (!nodes) return null;
+    return dedupePercent([
+      { x:start.point.x, y:start.point.y }, ...indoorNodePoints(floor, nodes), { x:exit.x, y:exit.y }
+    ]);
+  }
   function corridorRoute(a, b, floor) {
     const graphRoute = indoorRoomRoute(floor, a, b);
     if (graphRoute) return graphRoute;
@@ -405,7 +428,10 @@
       stageList.push({ floor:2, type:'stairs', route:toStair, distance:Math.max(18, Math.round(Math.hypot(room.x - stairPoint.x, room.y - stairPoint.y) * 1.45)), icon:'↱', title:`沿2F走廊前往${stair.name}`, detail:`从${room.code}教室出发，沿走廊前往${stair.name}，然后下到1F`, nextLabel:'我已到楼梯，下一层' });
     }
     const floor1Start = floor === 2 ? stair.floor1 : room;
-    const toDoor = dedupePercent([{ x:floor1Start.x, y:floor1Start.y }, { x:floor1Start.x, y:88 }, { x:door.x, y:88 }, { x:door.x, y:door.y }]);
+    const toDoor = (floor === 2
+      ? indoorStairToDoorRoute(1, stair, door)
+      : indoorRoomToDoorRoute(1, room, door))
+      || dedupePercent([{ x:floor1Start.x, y:floor1Start.y }, { x:floor1Start.x, y:88 }, { x:door.x, y:88 }, { x:door.x, y:door.y }]);
     stageList.push({ floor:1, type:'door', route:toDoor, distance:estimateRouteMeters(toDoor), icon:'↱', title:'沿1F走廊前往东南出口门', detail:`从${floor === 2 ? stair.name : room.code + '教室'}沿一层走廊前往A105教室右侧的东南出口门`, nextLabel:'我已到东南出口门', door });
     stageList.push({ floor:1, type:'outside', route:[door, door], distance:0, icon:'终', title:`到达${door.name}`, detail:'红色圈出的出口门就在前方，看到门后直接出去，再确认已到室外', nextLabel:'已到门外', door });
     return { mode:'outdoor', floor, room, stair, door, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → 楼梯 → 1F东南出口门 → 室外` };
