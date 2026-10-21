@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4f7fb">
   <title>东北大学浑南校区 · 校园导航</title>
-  <link rel="stylesheet" href="./styles.css?v=20261020-16">
+  <link rel="stylesheet" href="./styles.css?v=20261021-1">
 </head>
 <body>
   <main class="showcase">
@@ -16,7 +16,7 @@
       </div>
       <p class="eyebrow">校园导航 · 网页版</p>
       <h1>东北大学<br><span>浑南校区导航</span></h1>
-      <p class="intro">真实校园地图与步道路网，支持持续 GPS、室内校准、方向与步态推算，路线规划和转向提示都可直接体验。</p>
+      <p class="intro">真实校园地图与步道路网，支持持续 GPS、室内人工校准、外部定位接口、楼层路线和百度地图接力。</p>
       <div class="feature-grid">
         <div><i>◎</i><b>室内增强</b><span>GPS + 步态校准</span></div>
         <div><i>➤</i><b>路线导航</b><span>步道最短路径</span></div>
@@ -115,7 +115,7 @@
 
         <section class="indoor-nav-card" id="indoorNavCard" hidden>
           <div class="indoor-nav-head">
-            <div><b>室内路线图</b><small id="indoorNavSummary">2F教室 → 楼梯 → 1F出口</small></div>
+            <div><b>室内路线图</b><small id="indoorNavSummary">2F教室 → 楼梯 → 1F出口</small><span class="position-source-badge" id="indoorPositionSource">人工校准</span></div>
             <div class="indoor-floor-tabs"><span id="navFloor2" class="active">2F</span><span id="navFloor1">1F</span></div>
           </div>
           <div class="indoor-compass-hud" id="indoorCompassHud">
@@ -200,7 +200,7 @@
           <div class="position-fix-list" id="positionFixList"></div>
           <div class="position-fix-tools">
             <button id="pickOnMap">⌖ 在平面图上点我</button>
-            <div class="step-length-group"><span>步长</span><button class="step-length-btn" data-step-length="0.5">短</button><button class="step-length-btn active" data-step-length="0.64">标准</button><button class="step-length-btn" data-step-length="0.78">长</button></div>
+            <span class="fix-mode-label" id="positionFixSourceLabel">位置来源：人工校准</span>
           </div>
           <div class="position-fix-actions"><button id="nudgeBack">−2米</button><button id="resetSteps">重新计步</button><button id="nudgeForward">+2米</button></div>
           <div class="position-fix-note">室内连续精准定位需要蓝牙信标、Wi-Fi 指纹或 UWB 数据；当前使用路线节点校准降低累计误差。</div>
@@ -215,19 +215,13 @@
           </div>
           <div class="indoor-note" id="indoorNote">室内 GPS 经常漂移。先校准地图位置，再开启方向与运动传感器，即可通过步态推算实时移动。</div>
           <div class="indoor-actions">
-            <button class="indoor-primary" id="enableIndoor">开启室内辅助</button>
+            <button class="indoor-primary" id="enableIndoor">开启指南针</button>
             <button class="indoor-secondary" id="calibratePosition">校准位置</button>
             <button class="indoor-secondary" id="tryGps">尝试 GPS</button>
           </div>
           <button class="indoor-route-btn" id="indoorPlanRoute">规划室内路线 →</button>
-          <div class="manual-pad" id="manualPad">
-            <button class="pad-up" data-move="north">↑</button>
-            <button class="pad-left" data-move="west">←</button>
-            <button class="pad-center" id="calibrateCenter">校准</button>
-            <button class="pad-right" data-move="east">→</button>
-            <button class="pad-down" data-move="south">↓</button>
-          </div>
-          <div class="sensor-help">室内模式需要手机方向/运动传感器；桌面浏览器可使用方向键或上方校准按钮。</div>
+          <div class="manual-calibrate-row"><button id="calibrateCenter">⌖ 在平面图上选择我的位置</button></div>
+          <div class="sensor-help">位置以人工校准或外部 UWB / 蓝牙 / Wi-Fi 定位为准；指南针只辅助转向，不会推算位置。</div>
         </section>
         <section class="search-overlay" id="searchOverlay" hidden>
           <div class="search-head"><div class="search-field"><span>⌕</span><input id="searchInput" placeholder="搜索校园地点" autocomplete="off"><button id="clearSearch">×</button></div><button id="closeSearch">取消</button></div>
@@ -262,6 +256,8 @@
             <div><small>地图拖动</small><b id="debugDrag">--</b></div>
             <div><small>定位模式</small><b id="debugMode">--</b></div>
             <div><small>屏幕尺寸</small><b id="debugViewport">--</b></div>
+            <div><small>定位来源</small><b id="debugPositionSource">--</b></div>
+            <div><small>外部定位更新</small><b id="debugExternal">--</b></div>
           </div>
           <div class="debug-log" id="debugLog"></div>
           <div class="debug-actions"><button id="copyDebug">复制诊断信息</button><button id="closeDebugBottom">关闭</button></div>
@@ -288,9 +284,9 @@
       </div>
     </section>
   </main>
-  <script src="./data.js?v=20261020-16"></script>
-  <script src="./walk-graph.js?v=20261020-16"></script>
-  <script src="./nav-engine.js?v=20261020-16"></script>
-  <script src="./app.js?v=20261020-16"></script>
+  <script src="./data.js?v=20261021-1"></script>
+  <script src="./walk-graph.js?v=20261021-1"></script>
+  <script src="./nav-engine.js?v=20261021-1"></script>
+  <script src="./app.js?v=20261021-1"></script>
 </body>
 </html>

@@ -111,3 +111,18 @@ const INDOOR_STAIRS = [
   { id:'northeast', name:'东北侧楼梯', floor1:{x:85,y:22}, floor2:{x:90,y:20} },
   { id:'south', name:'南侧楼梯', floor1:{x:60,y:92}, floor2:{x:62,y:92} }
 ];
+
+
+
+
+const INDOOR_DOORS = [
+  {
+    id: 'door_a105_east',
+    name: '一号楼1F东南出口门',
+    shortName: '东南出口门',
+    x: 91,
+    y: 88,
+    note: 'A105教室右侧、图中红色圈出的出口门',
+    confirmed: true
+  }
+];

@@ -11,14 +11,18 @@
     tab:'map', category:'all', selectedId:null, detailId:null, mode:'walk', destinationId:'library', indoorDestination:null, roomDestFloor:1, roomDestIndex:0,
     current:{ lat:CAMPUS.demoStart.lat, lng:CAMPUS.demoStart.lng }, demo:true, heading:null,
     locationMode:'demo', accuracy:0, gpsAccuracy:null, mapWatchId:null, indoorAnchor:null, steps:0, lastStepAt:0, sensorOn:false, indoorPanelOpen:false, calibrating:false, followUser:true, indoorSuggested:false,
-    currentPlace:'', calibrationBuildingId:'building1', calibrationFloor:1, calibrationRoomIndex:0, handoffArmed:false, outdoorPromptCooldown:0, rawHeading:null, headingOffset:0, routeBearing:null, stepLength:0.64, pickingIndoorPosition:false,
+    currentPlace:'', calibrationBuildingId:'building1', calibrationFloor:1, calibrationRoomIndex:0, handoffArmed:false, outdoorPromptCooldown:0, rawHeading:null, headingOffset:0, headingAbsolute:false, routeBearing:null, stepLength:0.64, pickingIndoorPosition:false, positionSource:'manual', indoorPosition:null,
     map:{ scale:.58, cx:0, cy:0 },
     route:null, navigating:false, traveled:0, timer:null, watchId:null, arrived:false, indoorGuide:null,
     favorites:new Set(stored('neu_web_favorites') || ['library','canteen','building1']),
     recent:stored('neu_web_recent') || ['library','canteen','building1','sports'],
     routes:Number(stored('neu_web_routes')) || 12, showSteps:false
   };
-  const diag = { errors:[], motionEvents:0, orientationEvents:0, dragEvents:0, lastGpsAt:0, lastAccuracy:null, timer:null };
+  const diag = { errors:[], motionEvents:0, orientationEvents:0, dragEvents:0, lastGpsAt:0, lastExternalAt:0, lastAccuracy:null, timer:null };
+  const POSITION_SOURCE_LABELS = { manual:'人工校准', uwb:'UWB 实时定位', ble:'蓝牙信标定位', wifi:'Wi-Fi 指纹定位', external:'外部实时定位' };
+  function normalizePositionSource(source) { return String(source || 'external').toLowerCase(); }
+  function positionSourceLabel(source) { const key = normalizePositionSource(source); return POSITION_SOURCE_LABELS[key] || String(source || '外部实时定位'); }
+  function isExternalPositionSource(source) { return normalizePositionSource(source) !== 'manual'; }
   window.addEventListener('error', event => diag.errors.push(event.message || 'script error'));
   window.addEventListener('unhandledrejection', event => diag.errors.push(String(event.reason || 'promise rejection')));
 
@@ -151,19 +155,34 @@
     $('routeStartName').textContent = state.demo ? '演示位置' : indoor ? '室内定位' : '我的位置';
     renderIndoorUI();
   }
+  function updatePositionSourceUI() {
+    const badge = $('indoorPositionSource');
+    const fixLabel = $('positionFixSourceLabel');
+    const position = state.indoorPosition;
+    const source = position && position.source ? position.source : state.positionSource;
+    const label = positionSourceLabel(source);
+    const age = position && position.updatedAt ? Math.max(0, Math.round((Date.now() - position.updatedAt) / 1000)) : null;
+    if (badge) {
+      badge.textContent = position && position.accuracy ? `${label} · ±${Math.round(position.accuracy)}米` : label;
+      badge.classList.toggle('live', isExternalPositionSource(source));
+      badge.title = age != null ? `${age} 秒前更新` : '通过平面图人工校准';
+    }
+    if (fixLabel) fixLabel.textContent = `位置来源：${label}`;
+  }
   function renderIndoorUI() {
     const weakGps = state.gpsAccuracy && state.gpsAccuracy > 25;
-    const modeText = state.locationMode === 'indoor' ? '室内辅助定位' : state.locationMode === 'gps' ? (weakGps ? 'GPS 信号较弱' : 'GPS 实时定位') : state.indoorSuggested ? '等待室内校准' : '演示位置';
+    const modeText = state.locationMode === 'indoor' ? positionSourceLabel(state.positionSource) : state.locationMode === 'gps' ? (weakGps ? 'GPS 信号较弱' : 'GPS 实时定位') : state.indoorSuggested ? '等待室内校准' : '演示位置';
     $('indoorModeText').textContent = modeText;
     $('indoorAccuracy').textContent = state.accuracy ? `±${Math.round(state.accuracy)}米` : (state.gpsAccuracy ? `GPS ±${Math.round(state.gpsAccuracy)}米` : '--');
     $('indoorSteps').textContent = state.steps;
     $('indoorStatusDot').classList.toggle('ready', state.locationMode === 'indoor' || state.locationMode === 'gps');
     const placePrefix = state.currentPlace ? `当前位置：${state.currentPlace}。` : '';
     $('indoorNote').textContent = state.locationMode === 'indoor'
-      ? `${placePrefix}室内模式已开启：以校准点为起点，通过方向和步态推算移动。离开一号楼范围后将询问是否切换到百度地图。`
+      ? `${placePrefix}${isExternalPositionSource(state.positionSource) ? '当前位置来自外部硬件实时坐标。' : '当前位置来自你对平面图的明确校准。'}浏览器不会自动推算或移动你的位置。`
       : state.gpsAccuracy && state.gpsAccuracy > 25
         ? '当前 GPS 精度较弱，建议点击“校准位置”标注所在点，再开启室内辅助。'
-        : '室内 GPS 经常漂移。先校准地图位置，再开启方向与运动传感器，即可通过步态推算实时移动。';
+        : '室内位置只由外部定位或人工校准决定；指南针和步数不会改变你的位置。';
+    updatePositionSourceUI();
   }
   function renderNearby() {
     const list = LOCATIONS.slice().map(loc => Object.assign({}, loc, { distance:NavEngine.dist(state.current, loc) })).sort((a,b) => a.distance - b.distance).slice(0,3);
@@ -198,6 +217,12 @@
     els.top.hidden = true; els.controls.hidden = true; els.homeSheet.hidden = true; els.selectedSheet.hidden = true;
     els.routeSetup.hidden = true; els.routeSheet.hidden = true; els.navInstruction.hidden = true; els.navPanel.hidden = true;
     els.favoritesScreen.hidden = true; els.profileScreen.hidden = true;
+    $('indoorPanel').hidden = true;
+    $('indoorCalibration').hidden = true;
+    $('positionFixPanel').hidden = true;
+    $('calibrationTip').hidden = true;
+    state.indoorPanelOpen = false;
+    state.calibrating = false;
     document.querySelector('.map-source').style.display = 'none';
   }
   function setTab(tab) {
@@ -212,7 +237,12 @@
     } else if (tab === 'route') {
       els.controls.hidden = false;
       document.querySelector('.map-source').style.display = 'block';
-      if (state.navigating) { els.navInstruction.hidden = false; els.navPanel.hidden = false; }
+      if (state.navigating) {
+        els.navInstruction.hidden = false;
+        els.navPanel.hidden = false;
+        $('indoorNavCard').hidden = !state.indoorGuide;
+        requestAnimationFrame(syncIndoorNavLayout);
+      }
       else { els.routeSetup.hidden = false; els.routeSheet.hidden = false; }
       if (!state.route) planRoute();
       renderRouteUI();
@@ -270,6 +300,7 @@
     const destination = activeDestination();
     const stageList = [];
     const building = INDOOR_BUILDINGS[0];
+
     if (state.indoorDestination && destination.buildingId === 'building1') {
       const destRoom = building.roomsByFloor[destination.floor][destination.roomIndex];
       if (destination.floor === floor) {
@@ -278,6 +309,7 @@
         stageList.push({ floor, type:'arrive', route:[destRoom, destRoom], distance:0, icon:'终', title:`到达${destination.roomCode}${destination.roomType}`, detail:`目的地${destination.roomCode}${destination.roomType}就在附近`, nextLabel:'已到达' });
         return { mode:'indoor', floor, room, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → ${destination.floor}F ${destination.roomCode}` };
       }
+
       const nearest = nearestIndoorStair(room, floor);
       const stair = nearest.stair;
       const stairPoint = nearest.point;
@@ -291,20 +323,21 @@
       stageList.push({ floor:destination.floor, type:'arrive', route:[destRoom, destRoom], distance:0, icon:'终', title:`到达${destination.roomCode}${destination.roomType}`, detail:'已到达室内目的地', nextLabel:'已到达' });
       return { mode:'indoor', floor, room, destination, stair, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → ${destination.floor}F ${destination.roomCode}` };
     }
+
+    const door = INDOOR_DOORS[0];
     const nearest = nearestIndoorStair(room, floor);
     const stair = nearest.stair;
     const stairPoint = nearest.point;
-    const exitPoint = { x:48, y:93 };
     if (floor === 2) {
       const corridorY = stairPoint.y < 15 ? 10 : stairPoint.y > 70 ? 88 : stairPoint.y < 45 ? 22 : 38;
       const toStair = dedupePercent([{ x:room.x, y:room.y }, { x:room.x, y:corridorY }, { x:stairPoint.x, y:corridorY }, { x:stairPoint.x, y:stairPoint.y }]);
       stageList.push({ floor:2, type:'stairs', route:toStair, distance:Math.max(18, Math.round(Math.hypot(room.x - stairPoint.x, room.y - stairPoint.y) * 1.45)), icon:'↱', title:`沿2F走廊前往${stair.name}`, detail:`从${room.code}教室出发，沿走廊前往${stair.name}，然后下到1F`, nextLabel:'我已到楼梯，下一层' });
     }
-    const floor1Stair = stair.floor1;
-    const toExit = dedupePercent([{ x:floor1Stair.x, y:floor1Stair.y }, { x:floor1Stair.x, y:88 }, { x:exitPoint.x, y:88 }, exitPoint]);
-    stageList.push({ floor:1, type:'exit', route:toExit, distance:Math.max(floor === 1 ? 20 : 35, Math.round(Math.hypot(floor1Stair.x - exitPoint.x, floor1Stair.y - exitPoint.y) * .82 + 12)), icon:'↱', title:'下到1F，前往一号楼南出口', detail:`从${stair.name}沿一层主走廊前往南出口`, nextLabel:'我已到出口' });
-    stageList.push({ floor:1, type:'outside', route:[exitPoint, exitPoint], distance:0, icon:'终', title:'到达一号楼出口', detail:'确认已到室外后，切换百度地图继续室外导航', nextLabel:'已到室外' });
-    return { mode:'outdoor', floor, room, stair, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:'2F教室 → 楼梯 → 1F出口' };
+    const floor1Start = floor === 2 ? stair.floor1 : room;
+    const toDoor = dedupePercent([{ x:floor1Start.x, y:floor1Start.y }, { x:floor1Start.x, y:88 }, { x:door.x, y:88 }, { x:door.x, y:door.y }]);
+    stageList.push({ floor:1, type:'door', route:toDoor, distance:estimateRouteMeters(toDoor), icon:'↱', title:'沿1F走廊前往东南出口门', detail:`从${floor === 2 ? stair.name : room.code + '教室'}沿一层走廊前往A105教室右侧的东南出口门`, nextLabel:'我已到东南出口门', door });
+    stageList.push({ floor:1, type:'outside', route:[door, door], distance:0, icon:'终', title:`到达${door.name}`, detail:'红色圈出的出口门就在前方，看到门后直接出去，再确认已到室外', nextLabel:'已到门外', door });
+    return { mode:'outdoor', floor, room, stair, door, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → 楼梯 → 1F东南出口门 → 室外` };
   }
   function pointAlongPercentRoute(points, ratio) {
     if (!points.length) return { x:0, y:0 };
@@ -348,21 +381,24 @@
   function updateCompassUI() {
     const hasHeading = state.rawHeading != null;
     const heading = hasHeading ? normalizeDeg(state.heading) : 0;
-    $('compassHeading').textContent = hasHeading ? `${Math.round(heading)}° ${compassLabel(heading)}` : '--';
+    $('compassHeading').textContent = hasHeading ? (state.headingAbsolute ? `${Math.round(heading)}° ${compassLabel(heading)}` : `相对 ${Math.round(heading)}°`) : '--';
     $('compassNeedle').style.transform = `translateX(-50%) rotate(${heading}deg)`;
     let status = '方向未开启';
     let diff = 0;
     if (hasHeading && state.routeBearing != null) {
       diff = normalizeDiff(heading - state.routeBearing);
-      status = Math.abs(diff) <= 30 ? '方向正确' : diff > 0 ? '向左调整' : '向右调整';
+      const baseStatus = Math.abs(diff) <= 30 ? '方向正确' : diff > 0 ? '向左调整' : '向右调整';
+      status = state.headingAbsolute ? baseStatus : `相对方向 · ${baseStatus}`;
     } else if (hasHeading) {
       status = '指南针已开启';
     }
     $('compassStatus').textContent = status;
     $('calibrateCompass').textContent = hasHeading ? '校准方向' : '开启指南针';
     const arrow = $('indoorNavHeadingArrow');
+    arrow.hidden = !hasHeading;
     arrow.style.transform = `translate(-50%,-100%) rotate(${diff}deg)`;
     arrow.classList.toggle('off-course', Math.abs(diff) > 55);
+    $('compassNeedle').style.opacity = hasHeading ? '1' : '.22';
   }
   function drawCleanIndoorNav(source, canvas, callback) {
     const ctx = canvas.getContext('2d', { willReadFrequently:true });
@@ -394,12 +430,16 @@
     const drawOverlay = () => {
       const points = stage.route.map(p => `${p.x},${p.y}`).join(' ');
       $('indoorNavRouteSvg').innerHTML = `<polyline class="nav-route-white" points="${points}"></polyline><polyline class="nav-route-blue" points="${points}"></polyline>`;
-      const walked = Math.max(0, (state.steps - guide.startSteps) * state.stepLength + (guide.manualOffset || 0));
+      const walked = Math.max(0, guide.manualOffset || 0);
       const ratio = stage.distance > 0 ? Math.min(1, walked / stage.distance) : 1;
-      const dot = pointAlongPercentRoute(stage.route, ratio);
-      state.routeBearing = routeBearingAt(stage.route, ratio);
+      const routePoint = pointAlongPercentRoute(stage.route, ratio);
+      const livePosition = state.indoorPosition && state.indoorPosition.floor === stage.floor ? state.indoorPosition : null;
+      const dot = livePosition || routePoint;
+      const routeRatio = livePosition ? nearestRatioOnRoute(stage.route, livePosition) : ratio;
+      state.routeBearing = routeBearingAt(stage.route, routeRatio);
       $('indoorNavDot').style.left = dot.x + '%';
       $('indoorNavDot').style.top = dot.y + '%';
+      $('indoorNavDot').classList.toggle('external-position', !!livePosition && isExternalPositionSource(livePosition.source));
       updateCompassUI();
       $('navFloor2').classList.toggle('active', stage.floor === 2);
       $('navFloor1').classList.toggle('active', stage.floor === 1);
@@ -422,7 +462,7 @@
     const guide = state.indoorGuide;
     if (!guide) return;
     const stage = guide.stages[guide.stageIndex];
-    const walked = Math.max(0, (state.steps - guide.startSteps) * state.stepLength + (guide.manualOffset || 0));
+    const walked = Math.max(0, guide.manualOffset || 0);
     if (autoAdvance && stage.distance > 0 && walked >= stage.distance && guide.stageIndex < guide.stages.length - 1) {
       guide.stageIndex += 1;
       guide.startSteps = state.steps;
@@ -437,12 +477,23 @@
     if (guide.stageIndex < guide.stages.length - 1) {
       guide.stageIndex += 1;
       guide.startSteps = state.steps;
+      guide.manualOffset = 0;
+      const nextStage = guide.stages[guide.stageIndex];
+      const nextPoint = nextStage.route[0];
+      state.indoorPosition = { floor:nextStage.floor, x:nextPoint.x, y:nextPoint.y, accuracy:2, source:'manual', updatedAt:Date.now() };
+      state.positionSource = 'manual';
+      state.accuracy = 2;
+      updatePositionSourceUI();
       updateIndoorNavMap(true);
       updateNavUI();
-      showToast(guide.stages[guide.stageIndex].title);
+      showToast(nextStage.title);
       if (guide.stageIndex === guide.stages.length - 1) {
         if (guide.mode === 'indoor') arrive();
-        else { $('outdoorSwitch').classList.add('alert'); if (navigator.vibrate) navigator.vibrate([70, 40, 70]); }
+        else {
+          $('outdoorSwitch').classList.add('alert');
+          startMapWatch();
+          if (navigator.vibrate) navigator.vibrate([70, 40, 70]);
+        }
       }
     }
   }
@@ -472,9 +523,10 @@
     $('indoorNavCard').classList.add('picking');
     showToast('请在地图上点击你实际所在的位置');
   }
-  function nearestRatioOnRoute(points, target) {
-    if (!points || points.length < 2) return 0;
-    let total = 0, best = { distance:Infinity, ratio:0 };
+  function nearestPointOnRoute(points, target) {
+    if (!points || !points.length) return { distance:Infinity, ratio:0, point:{ x:0, y:0 } };
+    if (points.length === 1) return { distance:Math.hypot(target.x-points[0].x, target.y-points[0].y), ratio:0, point:points[0] };
+    let total = 0, best = { distance:Infinity, ratio:0, point:points[0] };
     const lengths = [];
     for (let i = 0; i < points.length - 1; i++) {
       const d = Math.hypot(points[i+1].x - points[i].x, points[i+1].y - points[i].y);
@@ -486,13 +538,14 @@
       const dx = b.x - a.x, dy = b.y - a.y;
       const lenSq = dx*dx + dy*dy;
       const t = lenSq ? Math.max(0, Math.min(1, ((target.x-a.x)*dx + (target.y-a.y)*dy) / lenSq)) : 0;
-      const px = a.x + dx*t, py = a.y + dy*t;
-      const d = Math.hypot(target.x-px, target.y-py);
-      if (d < best.distance) best = { distance:d, ratio: total ? (walked + lengths[i]*t) / total : 0 };
+      const point = { x:a.x + dx*t, y:a.y + dy*t };
+      const distance = Math.hypot(target.x-point.x, target.y-point.y);
+      if (distance < best.distance) best = { distance, ratio: total ? (walked + lengths[i]*t) / total : 0, point };
       walked += lengths[i];
     }
-    return best.ratio;
+    return best;
   }
+  function nearestRatioOnRoute(points, target) { return nearestPointOnRoute(points, target).ratio; }
   function applyPickedIndoorPosition(event) {
     if (!state.pickingIndoorPosition || !state.indoorGuide) return;
     const plan = $('indoorNavPlan');
@@ -502,9 +555,12 @@
     const stage = guide.stages[guide.stageIndex];
     const ratio = nearestRatioOnRoute(stage.route, target);
     const targetDistance = stage.distance * ratio;
-    const sensorDistance = Math.max(0, (state.steps - guide.startSteps) * state.stepLength);
-    guide.manualOffset = targetDistance - sensorDistance;
+    guide.manualOffset = targetDistance;
+    state.positionSource = 'manual';
+    state.accuracy = 2;
+    state.indoorPosition = { floor:stage.floor, x:target.x, y:target.y, accuracy:2, source:'manual', updatedAt:Date.now() };
     state.pickingIndoorPosition = false;
+    updatePositionSourceUI();
     $('indoorNavCard').classList.remove('picking');
     updateIndoorNavMap(false);
     updateNavUI();
@@ -530,6 +586,11 @@
     guide.stageIndex = Math.max(0, Math.min(index, guide.stages.length - 1));
     guide.startSteps = state.steps;
     guide.manualOffset = 0;
+    state.positionSource = 'manual';
+    state.accuracy = 2;
+    const checkpoint = guide.stages[guide.stageIndex].route[0];
+    state.indoorPosition = { floor:guide.stages[guide.stageIndex].floor, x:checkpoint.x, y:checkpoint.y, accuracy:2, source:'manual', updatedAt:Date.now() };
+    updatePositionSourceUI();
     updateIndoorNavMap(true);
     updateNavUI();
     closePositionFix();
@@ -539,6 +600,13 @@
     const guide = state.indoorGuide;
     if (!guide) return;
     guide.manualOffset = Math.max(0, (guide.manualOffset || 0) + delta);
+    const stage = guide.stages[guide.stageIndex];
+    const ratio = stage.distance > 0 ? Math.min(1, guide.manualOffset / stage.distance) : 1;
+    const point = pointAlongPercentRoute(stage.route, ratio);
+    state.positionSource = 'manual';
+    state.accuracy = 2;
+    state.indoorPosition = { floor:stage.floor, x:point.x, y:point.y, accuracy:2, source:'manual', updatedAt:Date.now() };
+    updatePositionSourceUI();
     updateIndoorNavMap(false);
     updateNavUI();
     showToast(delta > 0 ? '位置前移2米' : '位置后退2米');
@@ -557,7 +625,7 @@
     if (state.indoorGuide) {
       const guide = state.indoorGuide;
       const stage = guide.stages[guide.stageIndex];
-      const walked = Math.max(0, (state.steps - guide.startSteps) * state.stepLength + (guide.manualOffset || 0));
+      const walked = Math.max(0, guide.manualOffset || 0);
       const remaining = Math.max(0, stage.distance - walked);
       const distanceText = stage.distance === 0 || remaining <= 0 ? '已到达' : `约${Math.round(remaining)}米`;
       $('navArrow').textContent = stage.icon;
@@ -569,7 +637,7 @@
       $('nextArrow').textContent = stage.icon;
       $('nextTitle').textContent = stage.title;
       $('nextDistance').textContent = distanceText;
-      $('followMode').textContent = '室内步态跟随';
+      $('followMode').textContent = positionSourceLabel(state.positionSource);
       $('outdoorSwitch').hidden = guide.mode !== 'outdoor';
       $('indoorStepIcon').textContent = stage.icon;
       $('indoorStepTitle').textContent = stage.title;
@@ -837,32 +905,6 @@
     if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') tasks.push(DeviceOrientationEvent.requestPermission());
     return Promise.all(tasks).catch(() => ['denied']);
   }
-  function movePosition(distance, heading) {
-    const rad = heading * Math.PI / 180;
-    state.current = {
-      lat: state.current.lat + Math.cos(rad) * distance / 111320,
-      lng: state.current.lng + Math.sin(rad) * distance / (111320 * Math.cos(state.current.lat * Math.PI / 180))
-    };
-  }
-  function afterIndoorMove() {
-    state.demo = false; state.locationMode = 'indoor';
-    state.accuracy = Math.max(3, state.accuracy || 4);
-    refreshPill(); renderNearby();
-    if (state.followUser) panTo(state.current, .92); else renderMap();
-    if (state.tab === 'route') {
-      if (state.navigating) {
-        if (state.indoorGuide) {
-          updateIndoorGuideProgress(true);
-          updateNavUI();
-        } else {
-          state.route = NavEngine.plan(state.current, locById(state.destinationId), state.mode);
-          state.traveled = 0; updateNavUI();
-          if (maybePromptOutdoor(false)) return;
-          if (state.route.distance < 12) arrive();
-        }
-      } else planRoute();
-    }
-  }
   let sensorBound = false;
   function bindSensors() {
     if (sensorBound) return;
@@ -870,10 +912,22 @@
     const handleOrientation = (event, absolute) => {
       diag.orientationEvents += 1;
       let raw = null;
-      if (typeof event.webkitCompassHeading === 'number' && event.webkitCompassHeading >= 0) raw = event.webkitCompassHeading;
-      else if (typeof event.alpha === 'number' && (absolute || event.absolute)) raw = 360 - event.alpha;
-      else if (typeof event.alpha === 'number' && state.rawHeading == null) raw = 360 - event.alpha;
+      let isAbsolute = false;
+      const screenAngle = (screen.orientation && typeof screen.orientation.angle === 'number')
+        ? screen.orientation.angle
+        : (typeof window.orientation === 'number' ? window.orientation : 0);
+      if (typeof event.webkitCompassHeading === 'number' && event.webkitCompassHeading >= 0) {
+        raw = event.webkitCompassHeading;
+        isAbsolute = true;
+      } else if (typeof event.alpha === 'number' && (absolute || event.absolute)) {
+        raw = normalizeDeg(360 - event.alpha + screenAngle);
+        isAbsolute = true;
+      } else if (typeof event.alpha === 'number' && state.rawHeading == null) {
+        raw = normalizeDeg(360 - event.alpha + screenAngle);
+        isAbsolute = false;
+      }
       if (raw == null) return;
+      state.headingAbsolute = isAbsolute;
       state.rawHeading = normalizeDeg(raw);
       state.heading = normalizeDeg(state.rawHeading - state.headingOffset);
       renderUser();
@@ -892,10 +946,75 @@
       if (magnitude > threshold && now - state.lastStepAt > 330) {
         state.lastStepAt = now;
         state.steps += 1;
-        movePosition(state.stepLength, state.heading == null ? 0 : state.heading);
-        afterIndoorMove();
+        renderIndoorUI();
       }
     });
+  }
+  function applyExternalIndoorPosition(position) {
+    if (!position) return { ok:false, error:'缺少定位数据' };
+    if (position.outdoor === true) {
+      state.positionSource = 'external';
+      if (state.navigating && state.indoorGuide && state.indoorGuide.mode === 'outdoor') showOutdoorConfirmation();
+      return { ok:true, outdoor:true };
+    }
+    const floor = Number(position.floor);
+    const x = Number(position.x);
+    const y = Number(position.y);
+    if (!INDOOR_BUILDINGS[0].floors.includes(floor) || !Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 100 || y < 0 || y > 100) {
+      return { ok:false, error:'floor 必须为 1/2，x/y 必须为 0-100 的百分比坐标' };
+    }
+    const source = normalizePositionSource(position.source);
+    const accuracy = Number.isFinite(Number(position.accuracy)) && Number(position.accuracy) > 0 ? Number(position.accuracy) : 1.5;
+    const building = INDOOR_BUILDINGS[0];
+    const rooms = building.roomsByFloor[floor] || [];
+    const roomCode = position.roomCode ? String(position.roomCode).toUpperCase() : '';
+    const roomIndex = roomCode ? rooms.findIndex(room => room.code.toUpperCase() === roomCode) : -1;
+    state.locationMode = 'indoor';
+    state.demo = false;
+    state.positionSource = source;
+    state.accuracy = accuracy;
+    state.calibrationFloor = floor;
+    if (roomIndex >= 0) state.calibrationRoomIndex = roomIndex;
+    state.indoorPosition = { floor, x, y, accuracy, source, roomCode:roomCode || undefined, updatedAt:Date.now() };
+    state.currentPlace = roomCode ? `一号楼 · ${floor}F · ${roomCode}` : `一号楼 · ${floor}F`;
+    diag.lastExternalAt = Date.now();
+    if (state.indoorGuide) {
+      const guide = state.indoorGuide;
+      let best = null;
+      guide.stages.forEach((stage, index) => {
+        if (stage.floor !== floor) return;
+        const nearest = nearestPointOnRoute(stage.route, { x, y });
+        if (!best || nearest.distance < best.distance) best = { index, ratio:nearest.ratio, distance:nearest.distance };
+      });
+      if (best) {
+        guide.stageIndex = best.index;
+        const stage = guide.stages[guide.stageIndex];
+        guide.manualOffset = stage.distance * best.ratio;
+        guide.startSteps = state.steps;
+      }
+      updateIndoorNavMap(true);
+      updateNavUI();
+    }
+    refreshPill();
+    renderIndoorUI();
+    renderMap();
+    updatePositionSourceUI();
+    window.dispatchEvent(new CustomEvent('campus-indoor-position-applied', { detail:{ floor, x, y, accuracy, source } }));
+    return { ok:true, floor, x, y, accuracy, source };
+  }
+  let externalPositionSocket = null;
+  function connectExternalPositioning(url) {
+    if (!url) return false;
+    disconnectExternalPositioning();
+    externalPositionSocket = new WebSocket(url);
+    externalPositionSocket.addEventListener('message', event => {
+      try { applyExternalIndoorPosition(JSON.parse(event.data)); } catch (error) { diag.errors.push(`外部定位数据格式错误：${error.message}`); }
+    });
+    externalPositionSocket.addEventListener('error', () => showToast('外部定位连接失败'));
+    return true;
+  }
+  function disconnectExternalPositioning() {
+    if (externalPositionSocket) { externalPositionSocket.close(); externalPositionSocket = null; }
   }
   async function calibrateCompass() {
     if (state.rawHeading == null) {
@@ -929,7 +1048,7 @@
     state.steps = 0;
     bindSensors();
     refreshPill(); renderIndoorUI(); renderMap();
-    showToast(denied ? '已开启室内手动校准模式' : '室内传感器定位已开启');
+    showToast(denied ? '方向权限未开启，可继续人工校准位置' : '指南针已开启，位置仍以人工/外部定位为准');
   }
   function getCalibrationBuilding() {
     return INDOOR_BUILDINGS[0];
@@ -1010,8 +1129,8 @@
   function startCalibration() {
     state.calibrating = true;
     state.indoorPanelOpen = false;
-    state.calibrationFloor = state.calibrationFloor === 2 ? 2 : 1;
-    state.calibrationRoomIndex = 0;
+    state.calibrationFloor = state.indoorPosition && INDOOR_BUILDINGS[0].floors.includes(state.indoorPosition.floor) ? state.indoorPosition.floor : (state.calibrationFloor === 2 ? 2 : 1);
+    state.calibrationRoomIndex = Math.min(state.calibrationRoomIndex, currentCalibrationRooms().length - 1);
     $('indoorPanel').hidden = true;
     $('calibrationTip').hidden = true;
     $('indoorCalibration').hidden = false;
@@ -1023,19 +1142,21 @@
     $('indoorCalibration').hidden = true;
     openIndoorPanel();
   }
-  function applyCalibration(point, label) {
+  function applyCalibration(point, label, indoorPosition) {
     state.current = point;
     state.currentPlace = label || '地图校准位置';
     state.demo = false;
     state.locationMode = 'indoor';
-    state.accuracy = label ? 2 : 3;
+    state.positionSource = 'manual';
+    state.accuracy = indoorPosition ? 2 : 3;
+    state.indoorPosition = indoorPosition ? { ...indoorPosition, accuracy:2, source:'manual', updatedAt:Date.now() } : null;
     state.indoorAnchor = { lat:point.lat, lng:point.lng };
     state.steps = 0;
     state.calibrating = false;
     $('calibrationTip').hidden = true;
     $('indoorCalibration').hidden = true;
     state.followUser = true;
-    refreshPill(); renderNearby(); panTo(point, .96);
+    refreshPill(); updatePositionSourceUI(); renderNearby(); panTo(point, .96);
     if (state.tab === 'route') planRoute();
     showToast(`已校准到${state.currentPlace}`);
     openIndoorPanel();
@@ -1050,20 +1171,12 @@
       lat: base.lat + floorOffset + (offset % 2) * .00004,
       lng: base.lng + (Math.floor(offset / 2) - 1) * .000045
     };
-    applyCalibration(point, calibrationRoomLabel());
+    applyCalibration(point, calibrationRoomLabel(), { floor:state.calibrationFloor, x:room.x, y:room.y, roomCode:room.code });
   }
   function useMapCalibration() {
     $('indoorCalibration').hidden = true;
     $('calibrationTip').hidden = false;
     state.calibrating = true;
-  }
-  function manualMove(direction) {
-    const headings = { north:0, east:90, south:180, west:270 };
-    if (!(direction in headings)) return;
-    if (state.locationMode !== 'indoor') { state.locationMode = 'indoor'; state.demo = false; state.indoorAnchor = { lat:state.current.lat, lng:state.current.lng }; state.steps = 0; }
-    movePosition(2, headings[direction]);
-    state.steps += 1;
-    afterIndoorMove();
   }
   function startWatchNavigation() {
     if (!navigator.geolocation) {
@@ -1110,6 +1223,12 @@
     els.navInstruction.hidden = false; els.navPanel.hidden = false;
     if (state.locationMode === 'indoor') {
       state.indoorGuide = buildIndoorGuide();
+      const guideFloor = state.indoorGuide.stages[0].floor;
+      if (!state.indoorPosition || state.indoorPosition.floor !== guideFloor) {
+        const startRoom = state.indoorGuide.room;
+        state.indoorPosition = { floor:guideFloor, x:startRoom.x, y:startRoom.y, accuracy:2, source:'manual', updatedAt:Date.now() };
+        state.positionSource = 'manual';
+      }
       state.handoffArmed = state.indoorGuide.mode === 'outdoor';
       $('outdoorSwitch').hidden = state.indoorGuide.mode !== 'outdoor';
       $('indoorNavCard').hidden = false;
@@ -1121,7 +1240,8 @@
       updateNavUI();
       panTo(state.current, .9);
       requestAnimationFrame(syncIndoorNavLayout);
-      showToast('室内实时导航已开始，位置随传感器更新');
+      updatePositionSourceUI();
+      showToast(`室内导航已开始 · ${positionSourceLabel(state.positionSource)}`);
     } else {
       state.indoorGuide = null;
       $('indoorNavCard').hidden = true;
@@ -1209,11 +1329,10 @@
   $('calibrateCenter').addEventListener('click', startCalibration);
   $('tryGps').addEventListener('click', () => requestRealLocation(true));
   $('cancelCalibration').addEventListener('click', cancelCalibration);
-  document.querySelectorAll('[data-move]').forEach(btn => btn.addEventListener('click', () => manualMove(btn.dataset.move)));
   window.addEventListener('keydown', e => {
-    if ((!state.indoorPanelOpen && !(state.navigating && state.locationMode === 'indoor')) || ['INPUT','SELECT'].includes(document.activeElement.tagName)) return;
-    const map = { ArrowUp:'north', ArrowRight:'east', ArrowDown:'south', ArrowLeft:'west' };
-    if (map[e.key]) { e.preventDefault(); manualMove(map[e.key]); }
+    if (!state.navigating || state.locationMode !== 'indoor' || ['INPUT','SELECT'].includes(document.activeElement.tagName)) return;
+    if (e.key === 'ArrowRight') setNavCollapsed(false);
+    if (e.key === 'ArrowLeft') setNavCollapsed(true);
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && state.mapWatchId != null && navigator.geolocation) { navigator.geolocation.clearWatch(state.mapWatchId); state.mapWatchId = null; }
@@ -1232,6 +1351,8 @@
     $('debugDrag').textContent = `${diag.dragEvents} 次 · ${state.followUser ? '自动跟随' : '自由浏览'}`;
     $('debugMode').textContent = state.locationMode + (state.currentPlace ? ` · ${state.currentPlace}` : '');
     $('debugViewport').textContent = `${window.innerWidth}×${window.innerHeight} @${window.devicePixelRatio || 1}x`;
+    $('debugPositionSource').textContent = positionSourceLabel(state.positionSource);
+    $('debugExternal').textContent = diag.lastExternalAt ? `${Math.max(0, Math.round((Date.now() - diag.lastExternalAt) / 1000))}秒前` : '尚未收到';
     $('debugLog').textContent = [
       `URL: ${location.href}`,
       `UA: ${navigator.userAgent}`,
@@ -1267,6 +1388,9 @@
       `orientationEvents=${diag.orientationEvents}`,
       `dragEvents=${diag.dragEvents}`,
       `mode=${state.locationMode}`,
+      `positionSource=${state.positionSource}`,
+      `indoorPosition=${JSON.stringify(state.indoorPosition)}`,
+      `externalAgeMs=${diag.lastExternalAt ? Date.now() - diag.lastExternalAt : null}`,
       `place=${state.currentPlace}`,
       `errors=${JSON.stringify(diag.errors.slice(-5))}`,
       `ua=${navigator.userAgent}`
@@ -1475,5 +1599,21 @@
       showToast('诊断模式已开启，点击左下角 ! 查看');
     }
   }
+  window.addEventListener('campus-indoor-position', event => applyExternalIndoorPosition(event.detail));
+  window.CampusIndoorPositioning = {
+    update: applyExternalIndoorPosition,
+    connect: connectExternalPositioning,
+    disconnect: disconnectExternalPositioning,
+    getState: () => state.indoorPosition ? { ...state.indoorPosition } : null,
+    getNavigationState: () => ({
+      mode:state.locationMode,
+      source:state.positionSource,
+      navigating:state.navigating,
+      position:state.indoorPosition ? { ...state.indoorPosition } : null,
+      stageIndex:state.indoorGuide ? state.indoorGuide.stageIndex : null,
+      stageTitle:state.indoorGuide ? state.indoorGuide.stages[state.indoorGuide.stageIndex].title : null,
+      stageFloor:state.indoorGuide ? state.indoorGuide.stages[state.indoorGuide.stageIndex].floor : null
+    })
+  };
   init();
 })();
