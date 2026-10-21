@@ -432,9 +432,9 @@
       ? indoorStairToDoorRoute(1, stair, door)
       : indoorRoomToDoorRoute(1, room, door))
       || dedupePercent([{ x:floor1Start.x, y:floor1Start.y }, { x:floor1Start.x, y:88 }, { x:door.x, y:88 }, { x:door.x, y:door.y }]);
-    stageList.push({ floor:1, type:'door', route:toDoor, distance:estimateRouteMeters(toDoor), icon:'↱', title:'沿1F走廊前往东南出口门', detail:`从${floor === 2 ? stair.name : room.code + '教室'}沿一层走廊前往A105教室右侧的东南出口门；其他楼梯出口不参与室内外切换`, nextLabel:'我已到东南出口门', door });
+    stageList.push({ floor:1, type:'door', route:toDoor, distance:estimateRouteMeters(toDoor), icon:'↱', title:'沿1F走廊前往A105旁东南出口门', detail:`从${floor === 2 ? stair.name : room.code + '教室'}沿一层走廊前往A105教室右侧的东南出口门；其他楼梯出口不参与室内外切换`, nextLabel:'我已到东南出口门', door });
     stageList.push({ floor:1, type:'outside', route:[door, door], distance:0, icon:'终', title:`到达${door.name}`, detail:'红色圈出的出口门就在前方，看到门后直接出去，再确认已到室外', nextLabel:'已到门外', door });
-    return { mode:'outdoor', floor, room, stair, door, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:`${floor}F ${room.code} → 楼梯 → 1F东南出口门 → 室外` };
+    return { mode:'outdoor', floor, room, stair, door, destination, stageIndex:0, startSteps:state.steps, manualOffset:0, renderedKey:'', stages:stageList, summary:floor === 2 ? `2F ${room.code} → 楼梯 → 1F A105旁东南出口门 → 室外` : `1F ${room.code} → 1F A105旁东南出口门 → 室外` };
   }
   function pointAlongPercentRoute(points, ratio) {
     if (!points.length) return { x:0, y:0 };
