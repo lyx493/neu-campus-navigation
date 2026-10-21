@@ -1489,6 +1489,11 @@
         state.indoorPosition = { floor:guideFloor, x:startRoom.x, y:startRoom.y, accuracy:2, source:'manual', updatedAt:Date.now() };
         state.positionSource = 'manual';
       }
+      if (state.sensorTracking && !isExternalPositionSource(state.positionSource)) {
+        state.positionSource = 'sensor';
+        state.accuracy = 4;
+        state.indoorPosition = { ...state.indoorPosition, accuracy:4, source:'sensor', updatedAt:Date.now() };
+      }
       state.handoffArmed = state.indoorGuide.mode === 'outdoor';
       $('outdoorSwitch').hidden = state.indoorGuide.mode !== 'outdoor';
       $('indoorNavCard').hidden = false;
@@ -1613,6 +1618,10 @@
     $('debugViewport').textContent = `${window.innerWidth}×${window.innerHeight} @${window.devicePixelRatio || 1}x`;
     $('debugPositionSource').textContent = positionSourceLabel(state.positionSource);
     $('debugExternal').textContent = diag.lastExternalAt ? `${Math.max(0, Math.round((Date.now() - diag.lastExternalAt) / 1000))}秒前` : '尚未收到';
+    $('debugTracking').textContent = state.sensorTracking ? '已开启' : '未开启';
+    const headingDiff = state.rawHeading != null && state.routeBearing != null ? Math.round(normalizeDiff(state.heading - state.routeBearing)) : null;
+    $('debugHeadingDelta').textContent = headingDiff == null ? '方向未开启' : `${headingDiff}°`;
+    $('debugStepAge').textContent = state.lastStepAt ? `${Math.max(0, Math.round((Date.now() - state.lastStepAt) / 1000))}秒前` : '尚未检测';
     $('debugLog').textContent = [
       `URL: ${location.href}`,
       `UA: ${navigator.userAgent}`,
@@ -1651,6 +1660,10 @@
       `positionSource=${state.positionSource}`,
       `indoorPosition=${JSON.stringify(state.indoorPosition)}`,
       `externalAgeMs=${diag.lastExternalAt ? Date.now() - diag.lastExternalAt : null}`,
+      `sensorTracking=${state.sensorTracking}`,
+      `steps=${state.steps}`,
+      `heading=${state.heading}`,
+      `routeBearing=${state.routeBearing}`,
       `place=${state.currentPlace}`,
       `errors=${JSON.stringify(diag.errors.slice(-5))}`,
       `ua=${navigator.userAgent}`
